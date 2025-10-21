@@ -47,3 +47,4 @@ sizes.forEach(size => {
   link.href = canvas.toDataURL();
   link.click();
 });
+

@@ -125,3 +125,4 @@ docker-compose exec backend npm run seed
 O sistema está 100% funcional e pronto para testes de usabilidade! 🚤
 
 
+

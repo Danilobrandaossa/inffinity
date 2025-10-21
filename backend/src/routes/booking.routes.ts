@@ -22,3 +22,4 @@ router.delete('/:id', isAdmin, bookingController.delete.bind(bookingController))
 export default router;
 
 
+

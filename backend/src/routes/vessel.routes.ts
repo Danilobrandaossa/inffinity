@@ -23,3 +23,4 @@ router.delete('/:id/users/:userId', isAdmin, vesselController.removeUser.bind(ve
 export default router;
 
 
+

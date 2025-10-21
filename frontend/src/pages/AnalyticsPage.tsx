@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   BarChart, 
@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
     revenueByMonth, 
     usersByStatus,
     recentActivity,
-    vesselUsageStats
+    // vesselUsageStats
   } = dashboardData || {};
 
   return (

@@ -19,3 +19,4 @@ router.delete('/:id', isAdmin, blockedDateController.delete.bind(blockedDateCont
 export default router;
 
 
+

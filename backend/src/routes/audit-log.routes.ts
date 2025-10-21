@@ -14,3 +14,4 @@ router.get('/statistics', auditLogController.getStatistics.bind(auditLogControll
 export default router;
 
 
+

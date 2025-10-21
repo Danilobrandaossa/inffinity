@@ -81,3 +81,4 @@ echo -e "${YELLOW}⏹️  Parar todos os serviços:${NC}"
 echo -e "   docker-compose -f docker-compose.prod.yml down"
 echo ""
 
+

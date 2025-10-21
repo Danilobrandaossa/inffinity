@@ -21,3 +21,4 @@ router.delete('/:id', isAdmin, userController.delete.bind(userController));
 export default router;
 
 
+

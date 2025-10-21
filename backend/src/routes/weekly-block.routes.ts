@@ -18,3 +18,4 @@ router.delete('/:id', authorize('ADMIN'), weeklyBlockController.deleteWeeklyBloc
 
 export default router;
 
+

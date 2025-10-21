@@ -99,3 +99,4 @@ docker-compose -f docker-compose.prod.yml exec postgres pg_dump -U embarcacoes e
 
 **Documentação completa:** Ver `DEPLOY.md`
 
+

@@ -20,3 +20,4 @@ router.get('/recent-activity', authorize('ADMIN'), analyticsController.getRecent
 router.get('/vessel-usage-stats', authorize('ADMIN'), analyticsController.getVesselUsageStats.bind(analyticsController));
 
 export default router;
+

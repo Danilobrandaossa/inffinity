@@ -68,3 +68,4 @@ echo "   1. Apontar o DNS do domínio para o IP do servidor"
 echo "   2. Liberar as portas 80 e 443 no firewall"
 echo ""
 
+

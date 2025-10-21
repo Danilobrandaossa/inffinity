@@ -17,3 +17,4 @@ router.post('/regenerate-backup-codes', twoFactorController.regenerateBackupCode
 router.get('/status', twoFactorController.getStatus.bind(twoFactorController));
 
 export default router;
+

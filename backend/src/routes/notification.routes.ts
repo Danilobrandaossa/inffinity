@@ -23,3 +23,4 @@ router.delete('/:id', isAdmin, notificationController.delete.bind(notificationCo
 export default router;
 
 
+

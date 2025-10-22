@@ -81,7 +81,7 @@ export class BookingController {
         return res.status(403).json({ error: 'Sem permissão para ver esta reserva' });
       }
 
-      res.json(booking);
+      return res.json(booking);
     } catch (error) {
       next(error);
     }
@@ -102,7 +102,7 @@ export class BookingController {
         new Date(endDate as string)
       );
 
-      res.json(calendar);
+      return res.json(calendar);
     } catch (error) {
       next(error);
     }

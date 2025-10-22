@@ -23,7 +23,7 @@ export class AnalyticsController {
   }
 
   // Estatísticas gerais
-  async getGeneralStats(req: Request, res: Response) {
+  async getGeneralStats(_req: Request, res: Response) {
     try {
       const stats = await analyticsService.getGeneralStats();
 
@@ -41,7 +41,7 @@ export class AnalyticsController {
   }
 
   // Reservas por mês
-  async getBookingsByMonth(req: Request, res: Response) {
+  async getBookingsByMonth(_req: Request, res: Response) {
     try {
       const data = await analyticsService.getBookingsByMonth();
 
@@ -59,7 +59,7 @@ export class AnalyticsController {
   }
 
   // Reservas por embarcação
-  async getBookingsByVessel(req: Request, res: Response) {
+  async getBookingsByVessel(_req: Request, res: Response) {
     try {
       const data = await analyticsService.getBookingsByVessel();
 
@@ -77,7 +77,7 @@ export class AnalyticsController {
   }
 
   // Status de pagamentos
-  async getPaymentStatus(req: Request, res: Response) {
+  async getPaymentStatus(_req: Request, res: Response) {
     try {
       const data = await analyticsService.getPaymentStatus();
 
@@ -95,7 +95,7 @@ export class AnalyticsController {
   }
 
   // Receita por mês
-  async getRevenueByMonth(req: Request, res: Response) {
+  async getRevenueByMonth(_req: Request, res: Response) {
     try {
       const data = await analyticsService.getRevenueByMonth();
 

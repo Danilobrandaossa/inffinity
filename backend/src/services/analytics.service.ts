@@ -234,7 +234,7 @@ export class AnalyticsService {
             user: true
           }
         }
-      }
+      } as any
     });
 
     return vessels.map(vessel => ({

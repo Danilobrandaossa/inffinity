@@ -13,7 +13,7 @@ export class TwoFactorController {
   // Gerar secret e QR code para configuração
   async generateSecret(req: Request, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = (req.user as any)?.id;
 
       if (!userId) {
         return res.status(401).json({
@@ -40,7 +40,7 @@ export class TwoFactorController {
   // Verificar token 2FA
   async verifyToken(req: Request, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = (req.user as any)?.id;
       const validatedData = verifyTokenSchema.parse(req.body);
 
       if (!userId) {
@@ -68,7 +68,7 @@ export class TwoFactorController {
   // Habilitar 2FA
   async enableTwoFactor(req: Request, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = (req.user as any)?.id;
       const validatedData = verifyTokenSchema.parse(req.body);
 
       if (!userId) {
@@ -96,7 +96,7 @@ export class TwoFactorController {
   // Desabilitar 2FA
   async disableTwoFactor(req: Request, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = (req.user as any)?.id;
       const validatedData = verifyTokenSchema.parse(req.body);
 
       if (!userId) {
@@ -108,13 +108,13 @@ export class TwoFactorController {
 
       const result = await twoFactorService.disableTwoFactor(userId, validatedData.token);
 
-      res.json({
+      return res.json({
         success: true,
         data: result
       });
     } catch (error) {
       console.error('Erro ao desabilitar 2FA:', error);
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
       });
@@ -124,7 +124,7 @@ export class TwoFactorController {
   // Regenerar códigos de backup
   async regenerateBackupCodes(req: Request, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = (req.user as any)?.id;
       const validatedData = verifyTokenSchema.parse(req.body);
 
       if (!userId) {
@@ -136,13 +136,13 @@ export class TwoFactorController {
 
       const result = await twoFactorService.regenerateBackupCodes(userId, validatedData.token);
 
-      res.json({
+      return res.json({
         success: true,
         data: result
       });
     } catch (error) {
       console.error('Erro ao regenerar códigos de backup:', error);
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
       });
@@ -152,7 +152,7 @@ export class TwoFactorController {
   // Obter status do 2FA
   async getStatus(req: Request, res: Response) {
     try {
-      const userId = req.user?.id;
+      const userId = (req.user as any)?.id;
 
       if (!userId) {
         return res.status(401).json({

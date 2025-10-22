@@ -41,7 +41,7 @@ export class WeeklyBlockController {
   }
 
   // Listar todos os bloqueios semanais
-  async getAllWeeklyBlocks(req: Request, res: Response) {
+  async getAllWeeklyBlocks(_req: Request, res: Response) {
     try {
       const weeklyBlocks = await weeklyBlockService.getAllWeeklyBlocks();
 
@@ -59,7 +59,7 @@ export class WeeklyBlockController {
   }
 
   // Listar bloqueios semanais ativos
-  async getActiveWeeklyBlocks(req: Request, res: Response) {
+  async getActiveWeeklyBlocks(_req: Request, res: Response) {
     try {
       const weeklyBlocks = await weeklyBlockService.getActiveWeeklyBlocks();
 
@@ -119,7 +119,7 @@ export class WeeklyBlockController {
   }
 
   // Obter estatísticas dos bloqueios semanais
-  async getWeeklyBlockStats(req: Request, res: Response) {
+  async getWeeklyBlockStats(_req: Request, res: Response) {
     try {
       const stats = await weeklyBlockService.getWeeklyBlockStats();
 

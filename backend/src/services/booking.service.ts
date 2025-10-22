@@ -1,7 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/error-handler';
 import { BookingStatus } from '@prisma/client';
-import { addHours, startOfDay, isBefore, isAfter, differenceInHours, addDays } from 'date-fns';
+import { startOfDay, isBefore, isAfter, differenceInHours, addDays } from 'date-fns';
 import { WebhookService } from './webhook.service';
 import { WeeklyBlockService } from './weekly-block.service';
 
@@ -90,7 +90,7 @@ export class BookingService {
     }
 
     // 4. Verificar limite máximo de dias à frente (configurado por embarcação)
-    const maxDaysAhead = vessel.calendarDaysAhead || 62;
+    const maxDaysAhead = vessel?.calendarDaysAhead || 62;
     const maxAllowedDate = addDays(startOfDay(now), maxDaysAhead);
     if (isAfter(bookingDateTime, maxAllowedDate)) {
       throw new AppError(400, `Reservas só podem ser feitas até ${maxDaysAhead} dias à frente (até ${maxAllowedDate.toLocaleDateString('pt-BR')})`);
@@ -153,7 +153,7 @@ export class BookingService {
       } else {
         throw new AppError(
           400,
-          `Limite de ${maxActiveBookings} reservas ativas atingido para ${vessel.name}. Você poderá reservar novamente nesta embarcação após a data ${new Date(firstBooking.bookingDate).toLocaleDateString('pt-BR')} passar.`
+          `Limite de ${maxActiveBookings} reservas ativas atingido para ${vessel?.name}. Você poderá reservar novamente nesta embarcação após a data ${new Date(firstBooking.bookingDate).toLocaleDateString('pt-BR')} passar.`
         );
       }
     }

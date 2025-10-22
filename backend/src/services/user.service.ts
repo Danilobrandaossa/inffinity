@@ -77,8 +77,8 @@ export class UserService {
     });
 
     // Vincular embarcações com dados financeiros
-    if (data.vesselFinancials && data.vesselFinancials.length > 0) {
-      for (const vesselFinancial of data.vesselFinancials) {
+    if ((data as any).vesselFinancials && (data as any).vesselFinancials.length > 0) {
+      for (const vesselFinancial of (data as any).vesselFinancials) {
         // Criar ou atualizar UserVessel com dados financeiros
         const userVessel = await prisma.userVessel.upsert({
           where: {

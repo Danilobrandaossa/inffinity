@@ -59,16 +59,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Logger de requisições
-app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.path}`, {
-    ip: req.ip,
-    userAgent: req.get('user-agent'),
+app.use((_req, _res, next) => {
+  logger.info(`${_req.method} ${_req.path}`, {
+    ip: _req.ip,
+    userAgent: _req.get('user-agent'),
   });
   next();
 });
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -92,7 +92,7 @@ app.use('/api/two-factor', twoFactorRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),

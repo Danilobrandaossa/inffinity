@@ -142,14 +142,14 @@ export class AuthService {
 
   private generateAccessToken(userId: string, email: string, role: UserRole): string {
     const payload: JWTPayload = { userId, email, role };
-    return jwt.sign(payload, config.jwt.secret, {
-      expiresIn: config.jwt.expiresIn,
+    return jwt.sign(payload, config.jwt.secret as string, {
+      expiresIn: config.jwt.expiresIn as string,
     });
   }
 
   private async generateRefreshToken(userId: string): Promise<string> {
-    const token = jwt.sign({ userId }, config.jwt.refreshSecret, {
-      expiresIn: config.jwt.refreshExpiresIn,
+    const token = jwt.sign({ userId }, config.jwt.refreshSecret as string, {
+      expiresIn: config.jwt.refreshExpiresIn as string,
     });
 
     const expiresAt = new Date();

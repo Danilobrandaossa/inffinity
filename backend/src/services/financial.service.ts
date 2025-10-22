@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error-handler';
-import { addMonths, startOfMonth, endOfMonth, isAfter, isBefore, addDays, differenceInDays } from 'date-fns';
+import { addMonths, startOfMonth, isAfter, isBefore, addDays, differenceInDays } from 'date-fns';
 
 const prisma = new PrismaClient();
 
@@ -614,8 +614,8 @@ export class FinancialService {
         amount: marina.amount,
         dueDate: marina.dueDate,
         status: marina.status,
-        description: `Marina ${marina.referenceMonth}`,
-        referenceMonth: marina.referenceMonth
+        description: `Marina ${(marina as any).referenceMonth}`,
+        referenceMonth: (marina as any).referenceMonth
       })),
       ...adHocCharges.map(charge => ({
         id: charge.id,
@@ -629,7 +629,7 @@ export class FinancialService {
         dueDate: charge.dueDate || today,
         status: charge.status,
         description: charge.description,
-        chargeType: charge.chargeType
+        chargeType: (charge as any).chargeType
       }))
     ];
 

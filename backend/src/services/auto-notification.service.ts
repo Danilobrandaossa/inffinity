@@ -8,7 +8,7 @@ const notificationService = new NotificationService();
 export class AutoNotificationService {
   // Verificar e enviar notificações de vencimento
   async checkPaymentDueNotifications() {
-    const now = new Date();
+    const _now = new Date();
     
     // 1. Verificar parcelas vencendo em 1 dia
     await this.checkInstallmentsDueTomorrow();

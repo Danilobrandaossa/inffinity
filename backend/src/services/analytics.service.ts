@@ -162,8 +162,10 @@ export class AnalyticsService {
     const monthlyRevenue = new Map();
 
     [...installments, ...marinaPayments].forEach(payment => {
-      const month = payment.paymentDate.toISOString().substring(0, 7);
-      monthlyRevenue.set(month, (monthlyRevenue.get(month) || 0) + payment.amount);
+      if (payment.paymentDate) {
+        const month = payment.paymentDate.toISOString().substring(0, 7);
+        monthlyRevenue.set(month, (monthlyRevenue.get(month) || 0) + payment.amount);
+      }
     });
 
     // Preencher meses sem dados
@@ -238,9 +240,9 @@ export class AnalyticsService {
     return vessels.map(vessel => ({
       id: vessel.id,
       name: vessel.name,
-      totalBookings: vessel.bookings.length,
-      linkedUsers: vessel.userVessels.length,
-      utilizationRate: vessel.bookings.length / 30 * 100 // % de utilização nos últimos 30 dias
+      totalBookings: vessel.bookings?.length || 0,
+      linkedUsers: vessel.userVessels?.length || 0,
+      utilizationRate: (vessel.bookings?.length || 0) / 30 * 100 // % de utilização nos últimos 30 dias
     }));
   }
 

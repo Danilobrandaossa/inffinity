@@ -5,7 +5,7 @@ const analyticsService = new AnalyticsService();
 
 export class AnalyticsController {
   // Dashboard completo
-  async getDashboard(req: Request, res: Response) {
+  async getDashboard(_req: Request, res: Response) {
     try {
       const data = await analyticsService.getDashboardData();
 

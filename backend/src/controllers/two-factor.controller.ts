@@ -24,13 +24,13 @@ export class TwoFactorController {
 
       const result = await twoFactorService.generateSecret(userId);
 
-      res.json({
+      return res.json({
         success: true,
         data: result
       });
     } catch (error) {
       console.error('Erro ao gerar secret 2FA:', error);
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
       });
@@ -52,13 +52,13 @@ export class TwoFactorController {
 
       const isValid = await twoFactorService.verifyToken(userId, validatedData.token);
 
-      res.json({
+      return res.json({
         success: true,
         data: { isValid }
       });
     } catch (error) {
       console.error('Erro ao verificar token 2FA:', error);
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
       });
@@ -80,13 +80,13 @@ export class TwoFactorController {
 
       const result = await twoFactorService.enableTwoFactor(userId, validatedData.token);
 
-      res.json({
+      return res.json({
         success: true,
         data: result
       });
     } catch (error) {
       console.error('Erro ao habilitar 2FA:', error);
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
       });
@@ -163,13 +163,13 @@ export class TwoFactorController {
 
       const status = await twoFactorService.getTwoFactorStatus(userId);
 
-      res.json({
+      return res.json({
         success: true,
         data: status
       });
     } catch (error) {
       console.error('Erro ao obter status 2FA:', error);
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
       });

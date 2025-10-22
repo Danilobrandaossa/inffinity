@@ -5,7 +5,7 @@ const autoNotificationService = new AutoNotificationService();
 
 export class AutoNotificationController {
   // Executar todas as verificações automáticas
-  async runAllChecks(req: Request, res: Response) {
+  async runAllChecks(_req: Request, res: Response) {
     try {
       await autoNotificationService.runAllChecks();
 
@@ -23,7 +23,7 @@ export class AutoNotificationController {
   }
 
   // Verificar apenas notificações de pagamento
-  async checkPaymentNotifications(req: Request, res: Response) {
+  async checkPaymentNotifications(_req: Request, res: Response) {
     try {
       await autoNotificationService.checkPaymentDueNotifications();
 
@@ -41,7 +41,7 @@ export class AutoNotificationController {
   }
 
   // Verificar apenas notificações de manutenção
-  async checkMaintenanceNotifications(req: Request, res: Response) {
+  async checkMaintenanceNotifications(_req: Request, res: Response) {
     try {
       await autoNotificationService.checkMaintenanceNotifications();
 

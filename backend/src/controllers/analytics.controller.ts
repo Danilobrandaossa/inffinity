@@ -113,7 +113,7 @@ export class AnalyticsController {
   }
 
   // Usuários por status
-  async getUsersByStatus(req: Request, res: Response) {
+  async getUsersByStatus(_req: Request, res: Response) {
     try {
       const data = await analyticsService.getUsersByStatus();
 
@@ -150,7 +150,7 @@ export class AnalyticsController {
   }
 
   // Estatísticas de uso das embarcações
-  async getVesselUsageStats(req: Request, res: Response) {
+  async getVesselUsageStats(_req: Request, res: Response) {
     try {
       const data = await analyticsService.getVesselUsageStats();
 

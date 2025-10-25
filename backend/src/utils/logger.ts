@@ -28,6 +28,8 @@ export const logger = winston.createLogger({
       format: consoleFormat,
     }),
   ],
+  // Em produção, não mostrar stack traces completos
+  silent: config.nodeEnv === 'test',
 });
 
 // Em produção, adicionar transporte para arquivo

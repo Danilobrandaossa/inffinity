@@ -17,7 +17,7 @@ declare global {
 
 const prisma = globalThis.prisma ?? prismaClientSingleton();
 
-// Log queries em desenvolvimento
+// Log queries apenas em desenvolvimento
 if (process.env.NODE_ENV === 'development') {
   prisma.$on('query', (e) => {
     logger.debug('Query:', {

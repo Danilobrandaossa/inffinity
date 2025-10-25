@@ -135,7 +135,7 @@ export default function WeeklyBlocksPage() {
       queryClient.invalidateQueries({ queryKey: ['weekly-blocks'] });
       queryClient.invalidateQueries({ queryKey: ['weekly-blocks-stats'] });
     } catch (error) {
-      console.error('Erro ao alterar status do bloqueio:', error);
+      // Error updating block status
     }
   };
 

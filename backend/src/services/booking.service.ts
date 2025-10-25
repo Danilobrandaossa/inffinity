@@ -4,6 +4,7 @@ import { BookingStatus } from '@prisma/client';
 import { startOfDay, isBefore, isAfter, differenceInHours, addDays } from 'date-fns';
 import { WebhookService } from './webhook.service';
 import { WeeklyBlockService } from './weekly-block.service';
+import { logger } from '../utils/logger';
 
 const webhookService = new WebhookService();
 const weeklyBlockService = new WeeklyBlockService();
@@ -206,7 +207,7 @@ export class BookingService {
     try {
       await webhookService.sendBookingCreated(booking);
     } catch (error) {
-      console.error('Erro ao enviar webhook:', error);
+      logger.error('Erro ao enviar webhook:', error);
       // Não bloquear a criação da reserva se o webhook falhar
     }
 
@@ -401,7 +402,7 @@ export class BookingService {
     try {
       await webhookService.sendBookingCancelled(updatedBooking, reason);
     } catch (error) {
-      console.error('Erro ao enviar webhook:', error);
+      logger.error('Erro ao enviar webhook:', error);
     }
 
     return updatedBooking;

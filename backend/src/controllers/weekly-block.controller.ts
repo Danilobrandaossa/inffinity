@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { WeeklyBlockService } from '../services/weekly-block.service';
+import { logger } from '../utils/logger';
 
 const weeklyBlockService = new WeeklyBlockService();
 
@@ -32,7 +33,7 @@ export class WeeklyBlockController {
         message: 'Bloqueio semanal criado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao criar bloqueio semanal:', error);
+      logger.error('Erro ao criar bloqueio semanal:', error);
       res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -50,7 +51,7 @@ export class WeeklyBlockController {
         data: weeklyBlocks
       });
     } catch (error) {
-      console.error('Erro ao buscar bloqueios semanais:', error);
+      logger.error('Erro ao buscar bloqueios semanais:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -68,7 +69,7 @@ export class WeeklyBlockController {
         data: weeklyBlocks
       });
     } catch (error) {
-      console.error('Erro ao buscar bloqueios semanais ativos:', error);
+      logger.error('Erro ao buscar bloqueios semanais ativos:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -90,7 +91,7 @@ export class WeeklyBlockController {
         message: 'Bloqueio semanal atualizado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao atualizar bloqueio semanal:', error);
+      logger.error('Erro ao atualizar bloqueio semanal:', error);
       res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -110,7 +111,7 @@ export class WeeklyBlockController {
         message: 'Bloqueio semanal deletado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao deletar bloqueio semanal:', error);
+      logger.error('Erro ao deletar bloqueio semanal:', error);
       res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -128,7 +129,7 @@ export class WeeklyBlockController {
         data: stats
       });
     } catch (error) {
-      console.error('Erro ao buscar estatísticas dos bloqueios semanais:', error);
+      logger.error('Erro ao buscar estatísticas dos bloqueios semanais:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'

@@ -8,8 +8,17 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+env.production
 backend/.env
 frontend/.env
+
+# Production secrets
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
 
 # Build outputs
 dist/

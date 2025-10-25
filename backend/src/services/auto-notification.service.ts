@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { addDays } from 'date-fns';
 import { NotificationService } from './notification.service';
+import { logger } from '../utils/logger';
 
 const prisma = new PrismaClient();
 const notificationService = new NotificationService();
@@ -334,9 +335,9 @@ export class AutoNotificationService {
       await this.checkMaintenanceNotifications();
       await this.checkDrawNotifications();
       
-      console.log('✅ Verificações automáticas de notificação concluídas');
+      logger.info('✅ Verificações automáticas de notificação concluídas');
     } catch (error) {
-      console.error('❌ Erro nas verificações automáticas:', error);
+      logger.error('❌ Erro nas verificações automáticas:', error);
     }
   }
 }

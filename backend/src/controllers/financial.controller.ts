@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { FinancialService } from '../services/financial.service';
+import { logger } from '../utils/logger';
 
 const financialService = new FinancialService();
 
@@ -37,7 +38,7 @@ export class FinancialController {
         message: 'Informações financeiras atualizadas com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao atualizar dados financeiros:', error);
+      logger.error('Erro ao atualizar dados financeiros:', error);
       res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -57,7 +58,7 @@ export class FinancialController {
         data: financialInfo
       });
     } catch (error) {
-      console.error('Erro ao buscar informações financeiras:', error);
+      logger.error('Erro ao buscar informações financeiras:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -84,7 +85,7 @@ export class FinancialController {
         data: financialInfo
       });
     } catch (error) {
-      console.error('Erro ao buscar informações financeiras:', error);
+      logger.error('Erro ao buscar informações financeiras:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -102,7 +103,7 @@ export class FinancialController {
         data: report
       });
     } catch (error) {
-      console.error('Erro ao buscar relatório financeiro:', error);
+      logger.error('Erro ao buscar relatório financeiro:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -128,7 +129,7 @@ export class FinancialController {
         message: 'Pagamento registrado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao registrar pagamento:', error);
+      logger.error('Erro ao registrar pagamento:', error);
       res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -154,7 +155,7 @@ export class FinancialController {
         message: 'Pagamento registrado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao registrar pagamento:', error);
+      logger.error('Erro ao registrar pagamento:', error);
       res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -172,7 +173,7 @@ export class FinancialController {
         message: 'Verificação de vencimentos concluída'
       });
     } catch (error) {
-      console.error('Erro ao verificar vencimentos:', error);
+      logger.error('Erro ao verificar vencimentos:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -197,7 +198,7 @@ export class FinancialController {
         data: result
       });
     } catch (error) {
-      console.error('Erro ao registrar pagamento:', error);
+      logger.error('Erro ao registrar pagamento:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -215,7 +216,7 @@ export class FinancialController {
         data: payments
       });
     } catch (error) {
-      console.error('Erro ao buscar pagamentos por prioridade:', error);
+      logger.error('Erro ao buscar pagamentos por prioridade:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -244,7 +245,7 @@ export class FinancialController {
         message: 'Pagamento registrado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao registrar pagamento rápido:', error);
+      logger.error('Erro ao registrar pagamento rápido:', error);
       res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'

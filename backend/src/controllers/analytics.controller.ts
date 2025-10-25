@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { AnalyticsService } from '../services/analytics.service';
+import { logger } from '../utils/logger';
 
 const analyticsService = new AnalyticsService();
 
@@ -14,7 +15,7 @@ export class AnalyticsController {
         data
       });
     } catch (error) {
-      console.error('Erro ao buscar dados do dashboard:', error);
+      logger.error('Erro ao buscar dados do dashboard:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -32,7 +33,7 @@ export class AnalyticsController {
         data: stats
       });
     } catch (error) {
-      console.error('Erro ao buscar estatísticas gerais:', error);
+      logger.error('Erro ao buscar estatísticas gerais:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -50,7 +51,7 @@ export class AnalyticsController {
         data
       });
     } catch (error) {
-      console.error('Erro ao buscar reservas por mês:', error);
+      logger.error('Erro ao buscar reservas por mês:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -68,7 +69,7 @@ export class AnalyticsController {
         data
       });
     } catch (error) {
-      console.error('Erro ao buscar reservas por embarcação:', error);
+      logger.error('Erro ao buscar reservas por embarcação:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -86,7 +87,7 @@ export class AnalyticsController {
         data
       });
     } catch (error) {
-      console.error('Erro ao buscar status de pagamentos:', error);
+      logger.error('Erro ao buscar status de pagamentos:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -104,7 +105,7 @@ export class AnalyticsController {
         data
       });
     } catch (error) {
-      console.error('Erro ao buscar receita por mês:', error);
+      logger.error('Erro ao buscar receita por mês:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -122,7 +123,7 @@ export class AnalyticsController {
         data
       });
     } catch (error) {
-      console.error('Erro ao buscar usuários por status:', error);
+      logger.error('Erro ao buscar usuários por status:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -141,7 +142,7 @@ export class AnalyticsController {
         data
       });
     } catch (error) {
-      console.error('Erro ao buscar atividade recente:', error);
+      logger.error('Erro ao buscar atividade recente:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -159,7 +160,7 @@ export class AnalyticsController {
         data
       });
     } catch (error) {
-      console.error('Erro ao buscar estatísticas de uso das embarcações:', error);
+      logger.error('Erro ao buscar estatísticas de uso das embarcações:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'

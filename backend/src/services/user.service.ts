@@ -39,7 +39,11 @@ export class UserService {
     }
 
     // Se CPF for fornecido, usar como senha. Senão, usar senha fornecida
-    const passwordToUse = data.cpf || data.password || '123456'; // fallback para senha padrão
+    const passwordToUse = data.cpf || data.password;
+    
+    if (!passwordToUse) {
+      throw new AppError(400, 'Senha é obrigatória');
+    }
     const hashedPassword = await bcrypt.hash(passwordToUse, 12);
 
     // Criar usuário

@@ -63,7 +63,10 @@ export const errorHandler = (
   // Default error
   return res.status(500).json({
     error: 'Erro interno do servidor',
-    ...(process.env.NODE_ENV === 'development' && { details: err.message }),
+    ...(process.env.NODE_ENV === 'development' && { 
+      details: err.message,
+      stack: err.stack 
+    }),
   });
 };
 

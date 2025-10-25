@@ -39,8 +39,15 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Permitir requisições sem origin (mobile apps, Postman, etc)
-    if (!origin) return callback(null, true);
+    // Em desenvolvimento, permitir requisições sem origin (Postman, etc)
+    if (config.nodeEnv === 'development' && !origin) {
+      return callback(null, true);
+    }
+    
+    // Em produção, sempre exigir origin
+    if (!origin) {
+      return callback(new Error('Origin é obrigatório em produção'));
+    }
     
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -65,15 +72,6 @@ app.use((_req, _res, next) => {
     userAgent: _req.get('user-agent'),
   });
   next();
-});
-
-// Health check
-app.get('/health', (_req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  });
 });
 
 // Rotas da API

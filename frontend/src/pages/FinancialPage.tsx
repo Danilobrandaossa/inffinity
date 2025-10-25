@@ -445,7 +445,7 @@ export default function FinancialPage() {
                 })
                 .catch((error) => {
                   toast.error('Erro ao atualizar dados financeiros');
-                  console.error(error);
+                  // Error handling
                 });
             }} className="space-y-4">
               

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { AutoNotificationService } from '../services/auto-notification.service';
+import { logger } from '../utils/logger';
 
 const autoNotificationService = new AutoNotificationService();
 
@@ -14,7 +15,7 @@ export class AutoNotificationController {
         message: 'Verificações automáticas executadas com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao executar verificações automáticas:', error);
+      logger.error('Erro ao executar verificações automáticas:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -32,7 +33,7 @@ export class AutoNotificationController {
         message: 'Verificações de pagamento executadas com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao verificar notificações de pagamento:', error);
+      logger.error('Erro ao verificar notificações de pagamento:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -50,7 +51,7 @@ export class AutoNotificationController {
         message: 'Verificações de manutenção executadas com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao verificar notificações de manutenção:', error);
+      logger.error('Erro ao verificar notificações de manutenção:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'

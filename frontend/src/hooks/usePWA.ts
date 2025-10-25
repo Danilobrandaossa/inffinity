@@ -41,9 +41,12 @@ export const usePWA = () => {
       if ('serviceWorker' in navigator) {
         try {
           const registration = await navigator.serviceWorker.register('/sw.js');
-          console.log('Service Worker registered:', registration);
+          // Service Worker registered successfully
         } catch (error) {
-          console.error('Service Worker registration failed:', error);
+          // Service Worker registration failed - log silently in production
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Service Worker registration failed:', error);
+          }
         }
       }
     };
@@ -68,21 +71,24 @@ export const usePWA = () => {
       const { outcome } = await deferredPrompt.userChoice;
       
       if (outcome === 'accepted') {
-        console.log('PWA installed successfully');
+        // PWA installed successfully
         return true;
       } else {
-        console.log('PWA installation dismissed');
+        // PWA installation dismissed
         return false;
       }
     } catch (error) {
-      console.error('Error installing PWA:', error);
+      // PWA installation error - log silently in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error installing PWA:', error);
+      }
       return false;
     }
   };
 
   const requestNotificationPermission = async () => {
     if (!('Notification' in window)) {
-      console.log('This browser does not support notifications');
+      // Browser does not support notifications
       return false;
     }
 
@@ -91,7 +97,7 @@ export const usePWA = () => {
     }
 
     if (Notification.permission === 'denied') {
-      console.log('Notification permission denied');
+      // Notification permission denied
       return false;
     }
 

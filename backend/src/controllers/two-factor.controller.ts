@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { TwoFactorService } from '../services/two-factor.service';
+import { logger } from '../utils/logger';
 
 const twoFactorService = new TwoFactorService();
 
@@ -29,7 +30,7 @@ export class TwoFactorController {
         data: result
       });
     } catch (error) {
-      console.error('Erro ao gerar secret 2FA:', error);
+      logger.error('Erro ao gerar secret 2FA:', error);
       return res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -57,7 +58,7 @@ export class TwoFactorController {
         data: { isValid }
       });
     } catch (error) {
-      console.error('Erro ao verificar token 2FA:', error);
+      logger.error('Erro ao verificar token 2FA:', error);
       return res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -85,7 +86,7 @@ export class TwoFactorController {
         data: result
       });
     } catch (error) {
-      console.error('Erro ao habilitar 2FA:', error);
+      logger.error('Erro ao habilitar 2FA:', error);
       return res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -113,7 +114,7 @@ export class TwoFactorController {
         data: result
       });
     } catch (error) {
-      console.error('Erro ao desabilitar 2FA:', error);
+      logger.error('Erro ao desabilitar 2FA:', error);
       return res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -141,7 +142,7 @@ export class TwoFactorController {
         data: result
       });
     } catch (error) {
-      console.error('Erro ao regenerar códigos de backup:', error);
+      logger.error('Erro ao regenerar códigos de backup:', error);
       return res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -168,7 +169,7 @@ export class TwoFactorController {
         data: status
       });
     } catch (error) {
-      console.error('Erro ao obter status 2FA:', error);
+      logger.error('Erro ao obter status 2FA:', error);
       return res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'

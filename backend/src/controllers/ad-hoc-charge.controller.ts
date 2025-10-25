@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { AdHocChargeService } from '../services/ad-hoc-charge.service';
+import { logger } from '../utils/logger';
 
 const adHocChargeService = new AdHocChargeService();
 
@@ -41,7 +42,7 @@ export class AdHocChargeController {
         message: 'Cobrança avulsa criada com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao criar cobrança avulsa:', error);
+      logger.error('Erro ao criar cobrança avulsa:', error);
       res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -61,7 +62,7 @@ export class AdHocChargeController {
         data: charges
       });
     } catch (error) {
-      console.error('Erro ao buscar cobranças:', error);
+      logger.error('Erro ao buscar cobranças:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -85,7 +86,7 @@ export class AdHocChargeController {
         data: charges
       });
     } catch (error) {
-      console.error('Erro ao buscar todas as cobranças:', error);
+      logger.error('Erro ao buscar todas as cobranças:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -107,7 +108,7 @@ export class AdHocChargeController {
         message: 'Cobrança paga com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao pagar cobrança:', error);
+      logger.error('Erro ao pagar cobrança:', error);
       res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -129,7 +130,7 @@ export class AdHocChargeController {
         message: 'Cobrança cancelada com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao cancelar cobrança:', error);
+      logger.error('Erro ao cancelar cobrança:', error);
       res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -151,7 +152,7 @@ export class AdHocChargeController {
         message: 'Cobrança atualizada com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao atualizar cobrança:', error);
+      logger.error('Erro ao atualizar cobrança:', error);
       res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -171,7 +172,7 @@ export class AdHocChargeController {
         message: 'Cobrança deletada com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao deletar cobrança:', error);
+      logger.error('Erro ao deletar cobrança:', error);
       res.status(400).json({
         success: false,
         message: error instanceof Error ? error.message : 'Erro interno do servidor'
@@ -191,7 +192,7 @@ export class AdHocChargeController {
         data: history
       });
     } catch (error) {
-      console.error('Erro ao buscar histórico financeiro:', error);
+      logger.error('Erro ao buscar histórico financeiro:', error);
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'

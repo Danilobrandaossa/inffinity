@@ -597,8 +597,7 @@ export default function BookingsPage() {
                   const isBookedByOther = isBooked && !isAdmin && booking?.user?.id !== user?.id;
                   
                   // Verificar se a data está bloqueada por MANUTENÇÃO ou SORTEIO (bloqueios reais)
-                  const blockedInfo = getBlockedDateInfo(day);
-                  const weeklyBlockInfo = getWeeklyBlockInfo(day);
+                  // blockedInfo e weeklyBlockInfo já foram declarados acima
                   const blockInfo = weeklyBlockInfo || blockedInfo;
                   const isRealBlock = blockInfo && blockInfo.reason && 
                     (blockInfo.reason === 'MANUTENÇÃO' || blockInfo.reason === 'MAINTENANCE' || 

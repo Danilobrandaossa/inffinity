@@ -120,12 +120,9 @@ export default function SubscriptionPlansPage() {
           Cadastre novos planos recorrentes e visualize os existentes.
         </p>
         <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-          <p className="font-medium">ℹ️ Ambiente de testes</p>
+          <p className="font-medium">ℹ️ Informações</p>
           <p className="mt-1">
-            O Mercado Pago exige URLs HTTPS em produção. Se estiver testando localmente, deixe o campo
-            “URL de retorno” vazio e utilize cartões/token de sandbox. Os valores de juros e multa serão
-            aplicados apenas em cálculos internos; configure cobranças únicas (ex.: gasolina, manutenção)
-            pelo módulo de cobranças avulsas em <strong>Controle Financeiro</strong>.
+            Os valores de juros e multa serão aplicados apenas em cálculos internos. Configure cobranças únicas (ex.: gasolina, manutenção) pelo módulo de cobranças avulsas em <strong>Controle Financeiro</strong>.
           </p>
         </div>
       </div>

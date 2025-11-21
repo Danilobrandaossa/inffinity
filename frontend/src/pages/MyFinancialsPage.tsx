@@ -344,7 +344,7 @@ export default function MyFinancialsPage() {
                                       </span>
                                       {providerStatusLabel && (
                                         <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-                                          Mercado Pago: {providerStatusLabel}
+                                          Status: {providerStatusLabel}
                                         </span>
                                       )}
                                     </div>

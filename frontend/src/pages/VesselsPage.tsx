@@ -14,10 +14,12 @@ export default function VesselsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingVessel, setEditingVessel] = useState<any>(null);
 
-  const { data: vessels, isLoading } = useQuery({
+  const { data: vessels, isLoading, error } = useQuery({
     queryKey: ['my-vessels'],
     queryFn: async () => {
       const { data } = await api.get(isAdmin ? '/vessels' : '/vessels/my-vessels');
+      // Log para debug
+      console.log('Vessels fetched:', { isAdmin, count: data?.length, data });
       return data;
     },
     staleTime: 10 * 1000, // 10 segundos - equilibra atualização e estabilidade
@@ -210,6 +212,13 @@ export default function VesselsPage() {
           </button>
         )}
       </div>
+
+      {/* Debug Info */}
+      {error && (
+        <div className="card bg-red-50 border-red-200">
+          <p className="text-red-800">Erro ao carregar embarcações: {error.message}</p>
+        </div>
+      )}
 
       {/* Vessels Grid */}
       {vessels && vessels.length > 0 ? (

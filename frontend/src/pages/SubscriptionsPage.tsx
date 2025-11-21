@@ -245,7 +245,7 @@ export default function SubscriptionsPage() {
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800 max-w-xl">
           <p className="font-medium">💡 Pagamentos recorrentes via PIX</p>
           <p className="mt-1">
-            Ao gerar a assinatura criamos um pagamento PIX no Mercado Pago. Pague usando o QR Code ou
+            Funcionalidade de assinaturas desabilitada (Mercado Pago removido).
             copia e cola para ativar a recorrência.
           </p>
         </div>

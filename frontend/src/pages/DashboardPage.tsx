@@ -352,12 +352,12 @@ export default function DashboardPage() {
                     </td>
                     <td className="table-cell">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        booking.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                        booking.status === 'APPROVED' ? 'bg-green-500 text-white' :
                         booking.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
                         booking.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
                         'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {booking.status === 'APPROVED' ? 'Aprovado' :
+                        {booking.status === 'APPROVED' ? 'Reservado' :
                          booking.status === 'CANCELLED' ? 'Cancelado' :
                          booking.status === 'COMPLETED' ? 'Concluído' : 'Pendente'}
                       </span>

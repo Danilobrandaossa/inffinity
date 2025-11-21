@@ -647,16 +647,12 @@ export default function BookingsPage() {
                         } else {
                           // Modo normal - abrir modal de reserva
                           // Criar uma nova instância da data para garantir que não há problemas de referência
-                          const dateToSelect = new Date(day);
-                          const normalizedDate = startOfDay(dateToSelect);
-                          setSelectedDate(normalizedDate);
-                          
-                          // Debug: verificar se a data está sendo definida corretamente
-                          console.log('Data selecionada:', {
-                            original: day,
-                            normalized: normalizedDate,
-                            formatted: format(normalizedDate, 'dd/MM/yyyy')
-                          });
+                          // Usar os componentes da data (ano, mês, dia) para criar uma data limpa no timezone local
+                          const year = day.getFullYear();
+                          const month = day.getMonth();
+                          const date = day.getDate();
+                          const cleanDate = new Date(year, month, date, 0, 0, 0, 0);
+                          setSelectedDate(cleanDate);
                           
                           if (isAdmin) {
                             setShowAdminModal(true);

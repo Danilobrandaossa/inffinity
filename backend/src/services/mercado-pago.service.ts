@@ -1,10 +1,17 @@
-import {
-  MercadoPagoConfig,
-  Preference,
-  Payment,
-  PreApproval,
-  PreApprovalPlan,
-} from 'mercadopago';
+// Lazy import for mercadopago to avoid startup errors if package is not installed
+let mercadoPagoModule: any = null;
+const loadMercadoPago = () => {
+  if (!mercadoPagoModule) {
+    try {
+      mercadoPagoModule = require('mercadopago');
+    } catch (error) {
+      logger.warn('Mercado Pago package not found. Install with: npm install mercadopago');
+      mercadoPagoModule = null;
+    }
+  }
+  return mercadoPagoModule;
+};
+
 import { config } from '../config';
 import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/error-handler';
@@ -47,22 +54,24 @@ export type MercadoPagoWebhookResult =
 
 export class MercadoPagoService {
   private readonly enabled: boolean;
-  private readonly preferenceClient?: Preference;
-  private readonly paymentClient?: Payment;
-  private readonly preapprovalPlanClient?: PreApprovalPlan;
-  private readonly preapprovalClient?: PreApproval;
+  private readonly preferenceClient?: any;
+  private readonly paymentClient?: any;
+  private readonly preapprovalPlanClient?: any;
+  private readonly preapprovalClient?: any;
 
   constructor() {
-    this.enabled = config.mercadoPago.enabled && Boolean(config.mercadoPago.accessToken);
+    const mp = loadMercadoPago();
+    this.enabled = mp && config.mercadoPago.enabled && Boolean(config.mercadoPago.accessToken);
 
-    if (this.enabled) {
-      const clientOptions: ConstructorParameters<typeof MercadoPagoConfig>[0] = {
+    if (this.enabled && mp) {
+      const { MercadoPagoConfig, Preference, Payment, PreApprovalPlan, PreApproval } = mp;
+      
+      const clientOptions = {
         accessToken: config.mercadoPago.accessToken,
+        ...(config.mercadoPago.integratorId && {
+          options: { integratorId: config.mercadoPago.integratorId }
+        }),
       };
-
-      if (config.mercadoPago.integratorId) {
-        clientOptions.options = { integratorId: config.mercadoPago.integratorId };
-      }
 
       const client = new MercadoPagoConfig(clientOptions);
       this.preferenceClient = new Preference(client);

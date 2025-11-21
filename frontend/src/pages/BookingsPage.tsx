@@ -543,7 +543,7 @@ export default function BookingsPage() {
                   Manutenção
                 </div>
                 <div className="flex items-center">
-                  <div className="w-4 h-4 bg-gray-200 rounded mr-1 flex items-center justify-center">
+                  <div className="w-4 h-4 rounded mr-1 flex items-center justify-center" style={{ backgroundColor: '#F3F4F6' }}>
                     <Lock className="w-3 h-3 text-gray-600" />
                   </div>
                   Muito Distante

@@ -4,8 +4,37 @@ import { Calendar as CalendarIcon, Plus, X, Ship, User, AlertCircle } from 'luci
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import toast from 'react-hot-toast';
-import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isAfter, isBefore, startOfDay, startOfWeek, getDay } from 'date-fns';
+import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isAfter, isBefore, startOfDay, startOfWeek, getDay, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+// Helper para parsear data do backend sem problemas de timezone
+// Se a data vem como string no formato YYYY-MM-DD, cria Date local diretamente
+const parseBookingDate = (dateString: string | Date): Date => {
+  if (dateString instanceof Date) {
+    return dateString;
+  }
+  
+  // Se é string no formato YYYY-MM-DD, criar Date local diretamente
+  if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day, 0, 0, 0, 0);
+  }
+  
+  // Se é string ISO, extrair apenas a parte da data e criar localmente
+  if (typeof dateString === 'string' && dateString.includes('T')) {
+    const dateOnly = dateString.split('T')[0];
+    const [year, month, day] = dateOnly.split('-').map(Number);
+    return new Date(year, month - 1, day, 0, 0, 0, 0);
+  }
+  
+  // Fallback: usar new Date normal
+  const date = new Date(dateString);
+  // Se houve conversão de timezone, extrair componentes e criar localmente
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+  return new Date(year, month, day, 0, 0, 0, 0);
+};
 
 export default function BookingsPage() {
   const { user } = useAuthStore();
@@ -322,7 +351,7 @@ export default function BookingsPage() {
   const isDateBooked = (date: Date) => {
     if (!calendar) return false;
     return calendar.bookings.some((b: any) => 
-      isSameDay(new Date(b.bookingDate), date) && b.status !== 'CANCELLED'
+      isSameDay(parseBookingDate(b.bookingDate), date) && b.status !== 'CANCELLED'
     );
   };
 
@@ -356,7 +385,7 @@ export default function BookingsPage() {
   const getBookingForDate = (date: Date) => {
     if (!calendar) return null;
     return calendar.bookings.find((b: any) => 
-      isSameDay(new Date(b.bookingDate), date) && b.status !== 'CANCELLED'
+      isSameDay(parseBookingDate(b.bookingDate), date) && b.status !== 'CANCELLED'
     );
   };
 
@@ -724,7 +753,7 @@ export default function BookingsPage() {
                       </td>
                     )}
                     <td className="table-cell">
-                      {format(new Date(booking.bookingDate), 'dd/MM/yyyy', { locale: ptBR })}
+                      {format(parseBookingDate(booking.bookingDate), 'dd/MM/yyyy', { locale: ptBR })}
                     </td>
                     <td className="table-cell">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -984,7 +1013,7 @@ export default function BookingsPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Data:</span>
                     <span className="font-medium text-gray-900">
-                      {format(new Date(bookingToCancel.bookingDate), 'dd/MM/yyyy', { locale: ptBR })}
+                      {format(parseBookingDate(bookingToCancel.bookingDate), 'dd/MM/yyyy', { locale: ptBR })}
                     </span>
                   </div>
                   {bookingToCancel.user && (

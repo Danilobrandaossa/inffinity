@@ -27,7 +27,7 @@ services:
     restart: always
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:-embarcacoes}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-embarcacoes_db}?schema=public
+      DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       FRONTEND_URL: ${FRONTEND_URL}

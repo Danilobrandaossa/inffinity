@@ -29,9 +29,12 @@ export class UserService {
     city?: string;
     complement?: string;
   }, createdBy: string) {
+    // Normalizar email para lowercase antes de verificar/criar
+    const normalizedEmail = data.email.toLowerCase().trim();
+    
     // Verificar se email já existe
     const existingUser = await prisma.user.findUnique({
-      where: { email: data.email },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -49,7 +52,7 @@ export class UserService {
     // Criar usuário
     const user = await prisma.user.create({
       data: {
-        email: data.email,
+        email: normalizedEmail,
         password: hashedPassword,
         name: data.name,
         phone: data.phone,

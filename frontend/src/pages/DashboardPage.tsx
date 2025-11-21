@@ -1,5 +1,6 @@
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Ship, Calendar, Users, AlertCircle, Bell } from 'lucide-react';
+import { Ship, Calendar, Users, AlertCircle, Bell, X } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { Link } from 'react-router-dom';
@@ -7,6 +8,14 @@ import { Link } from 'react-router-dom';
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'ADMIN';
+  
+  // Estados para filtros
+  const [filters, setFilters] = useState({
+    vessel: '',
+    user: '',
+    date: '',
+    status: '',
+  });
 
   const { data: vessels } = useQuery({
     queryKey: ['vessels'],
@@ -49,6 +58,41 @@ export default function DashboardPage() {
 
   const unreadNotifications = notifications?.filter((n: any) => !n.isRead);
 
+  // Reservas filtradas
+  const filteredBookings = useMemo(() => {
+    const bookingsToFilter = isAdmin ? bookings : myBookings;
+    if (!bookingsToFilter) return [];
+
+    return bookingsToFilter.filter((booking: any) => {
+      // Filtro por embarcação
+      if (filters.vessel && booking.vessel.id !== filters.vessel) {
+        return false;
+      }
+
+      // Filtro por usuário (apenas admin)
+      if (isAdmin && filters.user && booking.user.id !== filters.user) {
+        return false;
+      }
+
+      // Filtro por data
+      if (filters.date) {
+        const bookingDate = new Date(booking.bookingDate).toISOString().split('T')[0];
+        if (bookingDate !== filters.date) {
+          return false;
+        }
+      }
+
+      // Filtro por status
+      if (filters.status && booking.status !== filters.status) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [bookings, myBookings, filters, isAdmin]);
+
+  const hasActiveFilters = filters.vessel || filters.user || filters.date || filters.status;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -63,7 +107,10 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+        <Link 
+          to="/vessels" 
+          className="card bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:shadow-lg transition-shadow cursor-pointer"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100 text-sm font-medium">Embarcações</p>
@@ -71,7 +118,7 @@ export default function DashboardPage() {
             </div>
             <Ship className="w-12 h-12 text-blue-200" />
           </div>
-        </div>
+        </Link>
 
         <div className="card bg-gradient-to-br from-green-500 to-green-600 text-white">
           <div className="flex items-center justify-between">
@@ -196,8 +243,89 @@ export default function DashboardPage() {
         <h2 className="text-xl font-bold text-gray-900 mb-4">
           {isAdmin ? 'Reservas Recentes' : 'Minhas Reservas Recentes'}
         </h2>
+
+        {/* Filtros */}
+        <div className="mb-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Filtro por Embarcação */}
+            <div>
+              <label className="label">Embarcação</label>
+              <select
+                value={filters.vessel}
+                onChange={(e) => setFilters({ ...filters, vessel: e.target.value })}
+                className="input"
+              >
+                <option value="">Todas</option>
+                {vessels?.map((vessel: any) => (
+                  <option key={vessel.id} value={vessel.id}>
+                    {vessel.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filtro por Usuário (apenas admin) */}
+            {isAdmin && (
+              <div>
+                <label className="label">Usuário</label>
+                <select
+                  value={filters.user}
+                  onChange={(e) => setFilters({ ...filters, user: e.target.value })}
+                  className="input"
+                >
+                  <option value="">Todos</option>
+                  {users?.map((u: any) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Filtro por Data */}
+            <div>
+              <label className="label">Data</label>
+              <input
+                type="date"
+                value={filters.date}
+                onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+                className="input"
+              />
+            </div>
+
+            {/* Filtro por Status */}
+            <div>
+              <label className="label">Status</label>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                className="input"
+              >
+                <option value="">Todos</option>
+                <option value="PENDING">Pendente</option>
+                <option value="APPROVED">Aprovado</option>
+                <option value="CANCELLED">Cancelado</option>
+                <option value="COMPLETED">Concluído</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Botão Limpar Filtros */}
+          {hasActiveFilters && (
+            <div>
+              <button
+                onClick={() => setFilters({ vessel: '', user: '', date: '', status: '' })}
+                className="btn btn-outline text-sm flex items-center"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Limpar Filtros
+              </button>
+            </div>
+          )}
+        </div>
         
-        {bookings && bookings.length > 0 ? (
+        {filteredBookings && filteredBookings.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="table">
               <thead className="table-head">
@@ -209,7 +337,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="table-body">
-                {(isAdmin ? bookings : myBookings)?.slice(0, 5).map((booking: any) => (
+                {filteredBookings.slice(0, 5).map((booking: any) => (
                   <tr key={booking.id}>
                     <td className="table-cell font-medium">{booking.vessel.name}</td>
                     {isAdmin && (
@@ -237,7 +365,7 @@ export default function DashboardPage() {
           </div>
         ) : (
           <p className="text-gray-500 text-center py-8">
-            Nenhuma reserva encontrada
+            {hasActiveFilters ? 'Nenhuma reserva encontrada com os filtros aplicados' : 'Nenhuma reserva encontrada'}
           </p>
         )}
 

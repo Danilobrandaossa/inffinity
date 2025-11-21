@@ -4,7 +4,7 @@ import { Calendar as CalendarIcon, Plus, X, Ship, User, AlertCircle } from 'luci
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import toast from 'react-hot-toast';
-import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isAfter, isBefore, startOfDay } from 'date-fns';
+import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isAfter, isBefore, startOfDay, startOfWeek, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function BookingsPage() {
@@ -303,9 +303,18 @@ export default function BookingsPage() {
   };
 
   const getDaysInMonth = () => {
-    const start = startOfMonth(currentMonth);
-    const end = endOfMonth(currentMonth);
-    const days = eachDayOfInterval({ start, end });
+    // Começar na primeira semana que contém o primeiro dia do mês
+    // date-fns startOfWeek usa segunda-feira por padrão, precisamos domingo (0)
+    const firstDayOfMonth = startOfMonth(currentMonth);
+    const firstDayOfCalendar = startOfWeek(firstDayOfMonth, { weekStartsOn: 0 }); // 0 = Domingo
+    const lastDayOfMonth = endOfMonth(currentMonth);
+    const lastDayOfCalendar = startOfWeek(endOfMonth(currentMonth), { weekStartsOn: 0 });
+    // Se o último dia do mês não está na mesma semana, precisamos incluir a semana seguinte
+    const end = lastDayOfMonth.getDate() >= 25 ? 
+      addDays(lastDayOfCalendar, 6) : // Semana completa após o último dia do mês
+      lastDayOfMonth;
+    
+    const days = eachDayOfInterval({ start: firstDayOfCalendar, end });
     // Normalizar todas as datas para início do dia no timezone local
     return days.map(day => startOfDay(day));
   };

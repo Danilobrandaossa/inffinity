@@ -20,6 +20,8 @@ export default function VesselsPage() {
       const { data } = await api.get(isAdmin ? '/vessels' : '/vessels/my-vessels');
       return data;
     },
+    staleTime: 0, // Sempre considerar stale para atualizações imediatas
+    gcTime: 5 * 60 * 1000, // Manter em cache por 5 minutos
   });
 
   const createMutation = useMutation({
@@ -29,32 +31,98 @@ export default function VesselsPage() {
       }
       return api.post('/vessels', data);
     },
-    onSuccess: () => {
-      // Invalidar ambas as keys para garantir que todas as queries sejam atualizadas
+    // Atualização otimista - atualiza UI antes da resposta da API
+    onMutate: async (newData) => {
+      // Cancelar queries em andamento para evitar sobrescrever atualização otimista
+      await queryClient.cancelQueries({ queryKey: ['my-vessels'] });
+      await queryClient.cancelQueries({ queryKey: ['vessels'] });
+
+      // Snapshot do valor anterior
+      const previousVessels = queryClient.getQueryData(['my-vessels']);
+
+      // Atualizar cache otimisticamente
+      if (editingVessel) {
+        queryClient.setQueryData(['my-vessels'], (old: any) => {
+          if (!old) return old;
+          return old.map((v: any) => 
+            v.id === editingVessel.id ? { ...v, ...newData } : v
+          );
+        });
+      } else {
+        // Criar novo item temporário
+        const tempId = `temp-${Date.now()}`;
+        const newVessel = {
+          id: tempId,
+          ...newData,
+          createdAt: new Date().toISOString(),
+        };
+        queryClient.setQueryData(['my-vessels'], (old: any) => {
+          return old ? [newVessel, ...old] : [newVessel];
+        });
+      }
+
+      return { previousVessels };
+    },
+    onSuccess: (response) => {
+      // Substituir item temporário pelo real da API
+      if (!editingVessel && response?.data) {
+        queryClient.setQueryData(['my-vessels'], (old: any) => {
+          if (!old) return [response.data];
+          return old.map((v: any) => 
+            v.id?.toString().startsWith('temp-') ? response.data : v
+          );
+        });
+      }
+      
+      // Invalidar e refetch para garantir sincronização
       queryClient.invalidateQueries({ queryKey: ['my-vessels'] });
       queryClient.invalidateQueries({ queryKey: ['vessels'] });
-      // Forçar refetch imediato
       queryClient.refetchQueries({ queryKey: ['my-vessels'] });
+      
       toast.success(editingVessel ? 'Embarcação atualizada!' : 'Embarcação criada!');
       setShowModal(false);
       setEditingVessel(null);
     },
-    onError: (error: any) => {
+    onError: (error: any, newData, context) => {
+      // Reverter para valor anterior em caso de erro
+      if (context?.previousVessels) {
+        queryClient.setQueryData(['my-vessels'], context.previousVessels);
+      }
       toast.error(error.response?.data?.error || 'Erro ao salvar embarcação');
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/vessels/${id}`),
+    // Atualização otimista - remove da UI imediatamente
+    onMutate: async (deletedId) => {
+      await queryClient.cancelQueries({ queryKey: ['my-vessels'] });
+      await queryClient.cancelQueries({ queryKey: ['vessels'] });
+
+      const previousVessels = queryClient.getQueryData(['my-vessels']);
+
+      // Remover imediatamente do cache
+      queryClient.setQueryData(['my-vessels'], (old: any) => {
+        return old ? old.filter((v: any) => v.id !== deletedId) : [];
+      });
+      queryClient.setQueryData(['vessels'], (old: any) => {
+        return old ? old.filter((v: any) => v.id !== deletedId) : [];
+      });
+
+      return { previousVessels };
+    },
     onSuccess: () => {
-      // Invalidar ambas as keys para garantir que todas as queries sejam atualizadas
+      // Invalidar para garantir sincronização
       queryClient.invalidateQueries({ queryKey: ['my-vessels'] });
       queryClient.invalidateQueries({ queryKey: ['vessels'] });
-      // Forçar refetch imediato
       queryClient.refetchQueries({ queryKey: ['my-vessels'] });
       toast.success('Embarcação excluída!');
     },
-    onError: (error: any) => {
+    onError: (error: any, deletedId, context) => {
+      // Reverter em caso de erro
+      if (context?.previousVessels) {
+        queryClient.setQueryData(['my-vessels'], context.previousVessels);
+      }
       toast.error(error.response?.data?.error || 'Erro ao excluir embarcação');
     },
   });

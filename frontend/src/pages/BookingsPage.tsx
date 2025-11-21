@@ -646,8 +646,18 @@ export default function BookingsPage() {
                           }
                         } else {
                           // Modo normal - abrir modal de reserva
-                          // day já está normalizado em getDaysInMonth, mas garantir normalização aqui também
-                          setSelectedDate(day);
+                          // Criar uma nova instância da data para garantir que não há problemas de referência
+                          const dateToSelect = new Date(day);
+                          const normalizedDate = startOfDay(dateToSelect);
+                          setSelectedDate(normalizedDate);
+                          
+                          // Debug: verificar se a data está sendo definida corretamente
+                          console.log('Data selecionada:', {
+                            original: day,
+                            normalized: normalizedDate,
+                            formatted: format(normalizedDate, 'dd/MM/yyyy')
+                          });
+                          
                           if (isAdmin) {
                             setShowAdminModal(true);
                           } else {

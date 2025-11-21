@@ -116,13 +116,12 @@ export class BookingService {
       }
     }
 
-    // 7. Verificar se já existe reserva para esta data
-    const existingBooking = await prisma.booking.findUnique({
+    // 7. Verificar se já existe reserva ATIVA para esta data (canceladas não contam)
+    const existingBooking = await prisma.booking.findFirst({
       where: {
-        vesselId_bookingDate: {
-          vesselId: data.vesselId,
-          bookingDate: bookingDateTime,
-        },
+        vesselId: data.vesselId,
+        bookingDate: bookingDateTime,
+        status: { not: 'CANCELLED' }, // Ignorar reservas canceladas
       },
     });
 

@@ -61,7 +61,8 @@ export class OneSignalService {
         {
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.restApiKey}`,
+            // OneSignal REST API v1 usa Basic Auth com a REST API Key como password
+            Authorization: `Basic ${this.restApiKey}`,
           },
         }
       );
@@ -110,7 +111,8 @@ export class OneSignalService {
         {
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.restApiKey}`,
+            // OneSignal REST API v1 usa Basic Auth com a REST API Key como password
+            Authorization: `Basic ${this.restApiKey}`,
           },
         }
       );

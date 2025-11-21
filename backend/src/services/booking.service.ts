@@ -200,7 +200,7 @@ export class BookingService {
             name: true,
             email: true,
             phone: true,
-            onesignalPlayerId: true, // Incluir para notificação push
+            onesignalPlayerId: true as any, // Incluir para notificação push - type assertion temporária
           },
         },
         vessel: {
@@ -417,7 +417,7 @@ export class BookingService {
             name: true,
             email: true,
             phone: true,
-            onesignalPlayerId: true, // Incluir para notificação push
+            onesignalPlayerId: true as any, // Incluir para notificação push - type assertion temporária
           },
         },
         vessel: {

@@ -33,9 +33,12 @@ RUN apt-get update && apt-get install -y curl openssl && rm -rf /var/lib/apt/lis
 # Copy package files (including package-lock.json)
 COPY package*.json ./
 
-# Install production dependencies + tsx (needed for dev mode)
-# Force npm to install all dependencies from package-lock.json
-RUN npm ci --only=production --legacy-peer-deps && npm install tsx --save-dev && npm cache clean --force
+# Copy node_modules from builder (already installed with npm ci --only=production)
+# This ensures all dependencies including mercadopago are present
+COPY --from=builder /app/node_modules ./node_modules
+
+# Install tsx as dev dependency (needed for dev mode)
+RUN npm install tsx --save-dev && npm cache clean --force
 
 # Copy Prisma schema and migrations
 COPY --from=builder /app/prisma ./prisma

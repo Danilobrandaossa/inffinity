@@ -191,12 +191,35 @@ export default function BookingsPage() {
 
       return { previousBookings };
     },
-    onSuccess: () => {
-      // Invalidar e refetch para garantir sincronização
+    onSuccess: (response) => {
+      // Atualizar a reserva cancelada com os dados da API (garante sincronização)
+      if (response?.data) {
+        queryClient.setQueryData(['bookings'], (old: any) => {
+          if (!old) return [response.data];
+          // Atualizar a reserva existente ao invés de criar nova
+          return old.map((b: any) => 
+            b.id === response.data.id ? response.data : b
+          );
+        });
+
+        // Atualizar calendário também
+        if (selectedVessel) {
+          queryClient.setQueryData(['calendar', selectedVessel.id, currentMonth], (old: any) => {
+            if (!old) return old;
+            return {
+              ...old,
+              bookings: old.bookings.map((b: any) =>
+                b.id === response.data.id ? response.data : b
+              ),
+            };
+          });
+        }
+      }
+
+      // Invalidar para garantir sincronização completa
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['calendar'] });
-      queryClient.refetchQueries({ queryKey: ['bookings'] });
-      queryClient.refetchQueries({ queryKey: ['calendar'] });
+      
       toast.success('Reserva cancelada!');
       setShowCancelModal(false);
       setBookingToCancel(null);

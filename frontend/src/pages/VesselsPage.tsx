@@ -264,23 +264,6 @@ export default function VesselsPage() {
                   )}
                 </div>
 
-                {/* Stats */}
-                {isAdmin && vessel._count && (
-                  <div className="flex gap-4 mb-4 pt-4 border-t">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-primary-600">
-                        {vessel._count.bookings}
-                      </p>
-                      <p className="text-xs text-gray-500">Reservas</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-primary-600">
-                        {vessel.users?.length || 0}
-                      </p>
-                      <p className="text-xs text-gray-500">Usuários</p>
-                    </div>
-                  </div>
-                )}
 
                 {/* Actions */}
                 <div className="flex gap-2">

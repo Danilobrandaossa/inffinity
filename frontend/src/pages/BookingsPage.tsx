@@ -62,7 +62,7 @@ export default function BookingsPage() {
       const { data } = await api.get('/bookings');
       return data;
     },
-    staleTime: 0, // Sempre considerar stale para atualizações imediatas
+    staleTime: 10 * 1000, // 10 segundos - equilibra atualização e estabilidade
   });
 
   // Criar reserva
@@ -72,13 +72,15 @@ export default function BookingsPage() {
     },
     // Atualização otimista - adiciona à UI imediatamente
     onMutate: async (newBooking) => {
-      await queryClient.cancelQueries({ queryKey: ['bookings'] });
-      await queryClient.cancelQueries({ queryKey: ['calendar'] });
-
+      // Preservar dados antes de cancelar
       const previousBookings = queryClient.getQueryData(['bookings']);
       const previousCalendar = selectedVessel 
         ? queryClient.getQueryData(['calendar', selectedVessel.id, currentMonth])
         : null;
+      
+      // Não cancelar queries para não afetar outras páginas
+      // await queryClient.cancelQueries({ queryKey: ['bookings'] });
+      // await queryClient.cancelQueries({ queryKey: ['calendar'] });
 
       // Adicionar reserva temporária à lista
       const tempBooking = {
@@ -160,10 +162,12 @@ export default function BookingsPage() {
     },
     // Atualização otimista - remove da UI imediatamente
     onMutate: async (bookingId) => {
-      await queryClient.cancelQueries({ queryKey: ['bookings'] });
-      await queryClient.cancelQueries({ queryKey: ['calendar'] });
-
+      // Preservar dados antes de atualizar
       const previousBookings = queryClient.getQueryData(['bookings']);
+      
+      // Não cancelar queries para não afetar outras páginas
+      // await queryClient.cancelQueries({ queryKey: ['bookings'] });
+      // await queryClient.cancelQueries({ queryKey: ['calendar'] });
 
       // Atualizar status para CANCELLED imediatamente
       queryClient.setQueryData(['bookings'], (old: any) => {

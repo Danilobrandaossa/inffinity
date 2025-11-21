@@ -17,41 +17,41 @@ export default function DashboardPage() {
     status: '',
   });
 
-  const { data: vessels } = useQuery({
+  const { data: vessels, isLoading: vesselsLoading } = useQuery({
     queryKey: ['vessels'],
     queryFn: async () => {
       const { data } = await api.get(isAdmin ? '/vessels' : '/vessels/my-vessels');
       return data;
     },
-    staleTime: 0, // Sempre considerar stale para atualizações imediatas
+    staleTime: 10 * 1000, // 10 segundos - mantém dados visíveis
   });
 
-  const { data: bookings } = useQuery({
+  const { data: bookings, isLoading: bookingsLoading } = useQuery({
     queryKey: ['bookings'],
     queryFn: async () => {
       const { data } = await api.get('/bookings');
       return data;
     },
-    staleTime: 0, // Sempre considerar stale para atualizações imediatas
+    staleTime: 10 * 1000, // 10 segundos - mantém dados visíveis
   });
 
-  const { data: users } = useQuery({
+  const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
       const { data } = await api.get('/users');
       return data;
     },
     enabled: isAdmin,
-    staleTime: 0, // Sempre considerar stale para atualizações imediatas
+    staleTime: 10 * 1000, // 10 segundos - mantém dados visíveis
   });
 
-  const { data: notifications } = useQuery({
+  const { data: notifications, isLoading: notificationsLoading } = useQuery({
     queryKey: ['my-notifications'],
     queryFn: async () => {
       const { data } = await api.get('/notifications/my-notifications');
       return data;
     },
-    staleTime: 0, // Sempre considerar stale para atualizações imediatas
+    staleTime: 10 * 1000, // 10 segundos - mantém dados visíveis
   });
 
   const activeBookings = bookings?.filter((b: any) => 

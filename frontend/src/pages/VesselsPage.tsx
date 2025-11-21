@@ -20,7 +20,7 @@ export default function VesselsPage() {
       const { data } = await api.get(isAdmin ? '/vessels' : '/vessels/my-vessels');
       return data;
     },
-    staleTime: 0, // Sempre considerar stale para atualizações imediatas
+    staleTime: 10 * 1000, // 10 segundos - equilibra atualização e estabilidade
     gcTime: 5 * 60 * 1000, // Manter em cache por 5 minutos
   });
 
@@ -33,12 +33,12 @@ export default function VesselsPage() {
     },
     // Atualização otimista - atualiza UI antes da resposta da API
     onMutate: async (newData) => {
-      // Cancelar queries em andamento para evitar sobrescrever atualização otimista
-      await queryClient.cancelQueries({ queryKey: ['my-vessels'] });
-      await queryClient.cancelQueries({ queryKey: ['vessels'] });
-
-      // Snapshot do valor anterior
+      // Snapshot do valor anterior (preservar antes de atualizar)
       const previousVessels = queryClient.getQueryData(['my-vessels']);
+      
+      // Não cancelar queries para não afetar outras páginas (como Dashboard)
+      // await queryClient.cancelQueries({ queryKey: ['my-vessels'] });
+      // await queryClient.cancelQueries({ queryKey: ['vessels'] });
 
       // Atualizar cache otimisticamente
       if (editingVessel) {
@@ -96,10 +96,12 @@ export default function VesselsPage() {
     mutationFn: (id: string) => api.delete(`/vessels/${id}`),
     // Atualização otimista - remove da UI imediatamente
     onMutate: async (deletedId) => {
-      await queryClient.cancelQueries({ queryKey: ['my-vessels'] });
-      await queryClient.cancelQueries({ queryKey: ['vessels'] });
-
+      // Preservar dados antes de atualizar
       const previousVessels = queryClient.getQueryData(['my-vessels']);
+      
+      // Não cancelar queries para não afetar outras páginas (como Dashboard)
+      // await queryClient.cancelQueries({ queryKey: ['my-vessels'] });
+      // await queryClient.cancelQueries({ queryKey: ['vessels'] });
 
       // Remover imediatamente do cache
       queryClient.setQueryData(['my-vessels'], (old: any) => {

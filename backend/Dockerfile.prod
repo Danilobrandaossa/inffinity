@@ -30,11 +30,12 @@ WORKDIR /app
 # Install curl and openssl for healthcheck and Prisma
 RUN apt-get update && apt-get install -y curl openssl && rm -rf /var/lib/apt/lists/*
 
-# Copy package files
+# Copy package files (including package-lock.json)
 COPY package*.json ./
 
 # Install production dependencies + tsx (needed for dev mode)
-RUN npm ci --only=production && npm install tsx --save-dev && npm cache clean --force
+# Force npm to install all dependencies from package-lock.json
+RUN npm ci --only=production --legacy-peer-deps && npm install tsx --save-dev && npm cache clean --force
 
 # Copy Prisma schema and migrations
 COPY --from=builder /app/prisma ./prisma

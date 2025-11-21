@@ -628,7 +628,9 @@ export default function BookingsPage() {
                           }
                         } else {
                           // Modo normal - abrir modal de reserva
-                          setSelectedDate(day);
+                          // Normalizar data para início do dia no timezone local (evita problemas de timezone)
+                          const normalizedDate = startOfDay(day);
+                          setSelectedDate(normalizedDate);
                           if (isAdmin) {
                             setShowAdminModal(true);
                           } else {
@@ -770,7 +772,7 @@ export default function BookingsPage() {
                   <label className="label">Data</label>
                   <input
                     type="text"
-                    value={format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    value={selectedDate ? format(startOfDay(selectedDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : ''}
                     className="input bg-white text-gray-900"
                     disabled
                   />
@@ -845,7 +847,7 @@ export default function BookingsPage() {
                   <label className="label">Data Selecionada</label>
                   <input
                     type="text"
-                    value={format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    value={format(startOfDay(selectedDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                     className="input bg-white text-gray-900"
                     disabled
                   />

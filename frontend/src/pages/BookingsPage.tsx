@@ -598,60 +598,48 @@ export default function BookingsPage() {
                     textColor = 'text-gray-400';
                     title = 'Data passada';
                   } else if (isTooFarAhead) {
-                    bgColor = 'bg-gray-200';
-                    textColor = 'text-gray-500';
+                    bgColor = '#F3F4F6';
+                    textColor = 'text-gray-600';
                     title = `Data muito distante (limite: ${maxDaysAhead} dias)`;
                   } else if (isDateBlocked) {
                     // Priorizar bloqueio semanal sobre bloqueio específico
                     const blockInfo = weeklyBlockInfo || blockedInfo;
-                    const blockType = weeklyBlockInfo ? 'SEMANAL' : 'ESPECÍFICO';
                     
                     if (blockInfo && blockInfo.reason) {
                       switch (blockInfo.reason) {
                       case 'MANUTENÇÃO':
                       case 'MAINTENANCE':
-                        bgColor = 'bg-red-600';
-                        title = `Bloqueado (${blockType}): Manutenção${blockInfo.notes ? ' - ' + blockInfo.notes : ''}`;
+                        bgColor = 'rgb(220 38 38)';
+                        textColor = 'text-white';
+                        title = `Manutenção${blockInfo.notes ? ' - ' + blockInfo.notes : ''}`;
                         break;
                       case 'SORTEIO':
                       case 'DRAW':
-                        bgColor = 'bg-gray-900';
-                        title = `Bloqueado (${blockType}): Sorteio${blockInfo.notes ? ' - ' + blockInfo.notes : ''}`;
-                        break;
-                      case 'OVERDUE_PAYMENT':
-                        bgColor = 'bg-yellow-600';
-                        title = `Bloqueado (${blockType}): Inadimplência${blockInfo.notes ? ' - ' + blockInfo.notes : ''}`;
-                        break;
-                      case 'INDISPONÍVEL':
-                      case 'UNAVAILABLE':
-                        bgColor = 'bg-orange-500';
-                        title = `Bloqueado (${blockType}): Indisponível${blockInfo.notes ? ' - ' + blockInfo.notes : ''}`;
-                        break;
-                      case 'FUNCIONAMENTO':
-                        bgColor = 'bg-purple-600';
-                        title = `Bloqueado (${blockType}): Funcionamento${blockInfo.notes ? ' - ' + blockInfo.notes : ''}`;
+                        bgColor = 'rgb(17 24 39)';
+                        textColor = 'text-white';
+                        title = `Sorteio${blockInfo.notes ? ' - ' + blockInfo.notes : ''}`;
                         break;
                       default:
-                        bgColor = 'bg-gray-600';
-                        title = `Bloqueado (${blockType})${blockInfo.notes ? ': ' + blockInfo.notes : ''}`;
+                        // Outros tipos de bloqueio não são mais exibidos - mostrar como disponível
+                        bgColor = '#F3F4F6';
+                        textColor = 'text-gray-900';
+                        title = 'Data disponível';
                     }
                     } else {
-                      // Fallback para quando blockInfo não existe
-                      bgColor = 'bg-gray-600';
-                      title = `Bloqueado (${blockType})`;
+                      // Fallback
+                      bgColor = '#F3F4F6';
+                      textColor = 'text-gray-900';
+                      title = 'Data disponível';
                     }
                   } else if (isBooked) {
-                    bgColor = 'bg-blue-400';
+                    bgColor = 'bg-green-500';
+                    textColor = 'text-white';
                     title = `Reservado por ${booking?.user.name}`;
-                  } else if (canBook) {
-                    bgColor = 'bg-green-50 border-green-200 hover:bg-green-100';
-                    textColor = 'text-gray-900';
-                    title = 'Disponível - Clique para reservar';
                   } else {
-                    // Data disponível mas não pode reservar (por outras razões)
-                    bgColor = 'bg-green-50 border-green-200';
+                    // Datas livres
+                    bgColor = '#F3F4F6';
                     textColor = 'text-gray-900';
-                    title = 'Disponível';
+                    title = canBook ? 'Disponível - Clique para reservar' : 'Data disponível';
                   }
 
                   return (

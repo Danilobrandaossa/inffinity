@@ -24,6 +24,27 @@ export default function VesselsPage() {
     gcTime: 5 * 60 * 1000, // Manter em cache por 5 minutos
   });
 
+  // Buscar reservas do usuário para contar reservas ativas por embarcação
+  const { data: bookings } = useQuery({
+    queryKey: ['bookings'],
+    queryFn: async () => {
+      const { data } = await api.get('/bookings');
+      return data;
+    },
+    staleTime: 10 * 1000, // 10 segundos
+    enabled: !isAdmin, // Apenas para usuários normais
+  });
+
+  // Função para contar reservas ativas do usuário em uma embarcação
+  const getActiveBookingsCount = (vesselId: string) => {
+    if (isAdmin || !bookings) return 0;
+    return bookings.filter((b: any) => 
+      b.vesselId === vesselId && 
+      ['PENDING', 'APPROVED'].includes(b.status) &&
+      b.user?.id === user?.id
+    ).length;
+  };
+
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       if (editingVessel) {
@@ -235,7 +256,10 @@ export default function VesselsPage() {
                   {vessel.bookingLimit && (
                     <div className="flex items-center">
                       <Calendar className="w-4 h-4 mr-2" />
-                      Limite: {vessel.bookingLimit.maxActiveBookings} reservas ativas
+                      Limite: {isAdmin 
+                        ? `${vessel.bookingLimit.maxActiveBookings} reservas ativas`
+                        : `${getActiveBookingsCount(vessel.id)}/${vessel.bookingLimit.maxActiveBookings} reservas ativas`
+                      }
                     </div>
                   )}
                 </div>

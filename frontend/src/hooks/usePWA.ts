@@ -39,12 +39,19 @@ export const usePWA = () => {
     // Register service worker
     const registerServiceWorker = async () => {
       if ('serviceWorker' in navigator) {
+        // Em modo desenvolvimento, garanta que nenhum SW fique registrado para evitar erros de fetch
+        if (import.meta.env.DEV) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map((registration) => registration.unregister()));
+          return;
+        }
+
         try {
           const registration = await navigator.serviceWorker.register('/sw.js');
           // Service Worker registered successfully
         } catch (error) {
           // Service Worker registration failed - log silently in production
-          if (process.env.NODE_ENV === 'development') {
+          if (import.meta.env.DEV) {
             console.error('Service Worker registration failed:', error);
           }
         }
@@ -79,7 +86,7 @@ export const usePWA = () => {
       }
     } catch (error) {
       // PWA installation error - log silently in production
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.DEV) {
         console.error('Error installing PWA:', error);
       }
       return false;

@@ -21,7 +21,8 @@ import {
   BarChart3,
   Zap,
   Layers,
-  Repeat
+  Repeat,
+  Settings
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import api from '@/lib/api';
@@ -60,6 +61,7 @@ export default function AppLayout() {
     { name: 'Controle Financeiro', href: '/financial', icon: DollarSign, show: isAdmin },
     { name: 'Planos de Assinatura', href: '/subscription-plans', icon: Layers, show: isAdmin },
     { name: 'Gerenciar Notificações', href: '/notification-management', icon: MessageSquare, show: isAdmin },
+    { name: 'Configurações', href: '/settings', icon: Settings, show: isAdmin },
     { name: 'Usuários', href: '/users', icon: Users, show: isAdmin },
     { name: 'Bloqueios', href: '/blocked-dates', icon: ShieldBan, show: isAdmin },
     { name: 'Bloqueios Semanais', href: '/weekly-blocks', icon: Clock, show: isAdmin },

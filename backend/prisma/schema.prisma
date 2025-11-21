@@ -469,5 +469,18 @@ model Subscription {
   @@map("subscriptions")
 }
 
+model SystemSettings {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  category  String   @default("general") // general, onesignal, email, etc
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+  @@index([category])
+  @@map("system_settings")
+}
+
 
 

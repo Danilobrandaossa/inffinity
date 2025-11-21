@@ -23,6 +23,7 @@ import twoFactorRoutes from './routes/two-factor.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import subscriptionPlanRoutes from './routes/subscription-plan.routes';
 import subscriptionRoutes from './routes/subscription.routes';
+import systemSettingsRoutes from './routes/system-settings.routes';
 import { initSubscriptionBillingJob } from './jobs/subscription-billing.job';
 
 // Carregar variáveis de ambiente
@@ -125,6 +126,7 @@ app.use('/api/two-factor', twoFactorRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/subscription-plans', subscriptionPlanRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/system-settings', systemSettingsRoutes);
 
 // Health check endpoint com informações de segurança
 app.get('/health', (_req, res) => {

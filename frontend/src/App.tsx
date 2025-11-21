@@ -22,6 +22,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import FinancialPriorityPage from './pages/FinancialPriorityPage';
 import SubscriptionPlansPage from './pages/SubscriptionPlansPage';
 import SubscriptionsPage from './pages/SubscriptionsPage';
+import SettingsPage from './pages/SettingsPage';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';

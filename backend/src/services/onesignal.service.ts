@@ -2,15 +2,26 @@ import axios from 'axios';
 import { config } from '../config';
 import { logger } from '../utils/logger';
 import { prisma } from '../utils/prisma';
+import { SystemSettingsService } from './system-settings.service';
 
 export class OneSignalService {
-  private readonly appId: string;
-  private readonly restApiKey: string;
   private readonly apiUrl = 'https://onesignal.com/api/v1';
+  private systemSettingsService = new SystemSettingsService();
 
-  constructor() {
-    this.appId = config.onesignal.appId;
-    this.restApiKey = config.onesignal.restApiKey;
+  /**
+   * Obter App ID do banco ou variável de ambiente
+   */
+  private async getAppId(): Promise<string> {
+    const dbConfig = await this.systemSettingsService.getOneSignalConfig();
+    return dbConfig.appId || config.onesignal.appId || '';
+  }
+
+  /**
+   * Obter REST API Key do banco ou variável de ambiente
+   */
+  private async getRestApiKey(): Promise<string> {
+    const dbConfig = await this.systemSettingsService.getOneSignalConfig();
+    return dbConfig.restApiKey || config.onesignal.restApiKey || '';
   }
 
   /**
@@ -45,8 +56,16 @@ export class OneSignalService {
         return;
       }
 
+      const appId = await this.getAppId();
+      const restApiKey = await this.getRestApiKey();
+
+      if (!appId || !restApiKey) {
+        logger.warn('OneSignal não configurado: App ID ou REST API Key ausentes');
+        return;
+      }
+
       const payload = {
-        app_id: this.appId,
+        app_id: appId,
         include_player_ids: playerIds,
         headings: { en: data.title, pt: data.title },
         contents: { en: data.message, pt: data.message },
@@ -61,7 +80,7 @@ export class OneSignalService {
           headers: {
             'Content-Type': 'application/json',
             // OneSignal REST API v1 usa Basic Auth com a REST API Key como password
-            Authorization: `Basic ${this.restApiKey}`,
+            Authorization: `Basic ${restApiKey}`,
           },
         }
       );
@@ -89,8 +108,16 @@ export class OneSignalService {
     data?: Record<string, any>;
   }): Promise<void> {
     try {
+      const appId = await this.getAppId();
+      const restApiKey = await this.getRestApiKey();
+
+      if (!appId || !restApiKey) {
+        logger.warn('OneSignal não configurado: App ID ou REST API Key ausentes');
+        return;
+      }
+
       const payload: any = {
-        app_id: this.appId,
+        app_id: appId,
         included_segments: ['All'],
         headings: { en: data.title, pt: data.title },
         contents: { en: data.message, pt: data.message },
@@ -111,7 +138,7 @@ export class OneSignalService {
           headers: {
             'Content-Type': 'application/json',
             // OneSignal REST API v1 usa Basic Auth com a REST API Key como password
-            Authorization: `Basic ${this.restApiKey}`,
+            Authorization: `Basic ${restApiKey}`,
           },
         }
       );

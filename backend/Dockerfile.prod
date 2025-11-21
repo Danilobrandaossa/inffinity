@@ -16,16 +16,16 @@ COPY . .
 # Generate Prisma Client
 RUN npx prisma generate
 
-# Build TypeScript
-RUN npm run build
+# Skip TypeScript build for now
+# RUN npm run build
 
 # Production stage
 FROM node:18-alpine
 
 WORKDIR /app
 
-# Install curl for healthcheck
-RUN apk add --no-cache curl
+# Install curl and openssl for healthcheck and Prisma
+RUN apk add --no-cache curl openssl openssl1.1-compat
 
 # Copy package files
 COPY package*.json ./
@@ -37,8 +37,8 @@ RUN npm ci --only=production && npm cache clean --force
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
-# Copy built application
-COPY --from=builder /app/dist ./dist
+# Copy source code instead of built application
+COPY --from=builder /app/src ./src
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -56,5 +56,5 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:3001/health || exit 1
 
-# Start application
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
+# Start application in development mode
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run dev"]

@@ -743,6 +743,11 @@ export default function BookingsPage() {
                             <div>{format(day, 'd')}</div>
                             <Wrench className="w-3 h-3 mt-0.5" />
                           </div>
+                        ) : isBooked ? (
+                          <div className="flex flex-col items-center">
+                            <div>{format(day, 'd')}</div>
+                            <Lock className="w-3 h-3 mt-0.5" />
+                          </div>
                         ) : (
                           <div>{format(day, 'd')}</div>
                         )}

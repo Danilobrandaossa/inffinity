@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Settings, Save, Bell, AlertCircle } from 'lucide-react';
+import { Settings, Save, Bell, AlertCircle, Send } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -38,6 +38,19 @@ export default function SettingsPage() {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Erro ao atualizar configurações');
+    },
+  });
+
+  // Mutation para testar notificação
+  const testNotificationMutation = useMutation({
+    mutationFn: async () => {
+      return api.post('/system-settings/onesignal/test');
+    },
+    onSuccess: () => {
+      toast.success('Notificação de teste enviada! Verifique seu dispositivo em alguns segundos.');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Erro ao enviar notificação de teste');
     },
   });
 
@@ -149,7 +162,25 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end pt-4 border-t">
+            <div className="flex items-center justify-between pt-4 border-t">
+              <button
+                type="button"
+                onClick={() => testNotificationMutation.mutate()}
+                disabled={testNotificationMutation.isPending || !appId || !restApiKey}
+                className="btn btn-outline flex items-center"
+              >
+                {testNotificationMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600 mr-2"></div>
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Enviar Notificação de Teste
+                  </>
+                )}
+              </button>
               <button
                 type="submit"
                 disabled={updateMutation.isPending}

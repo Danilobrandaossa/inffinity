@@ -76,5 +76,28 @@ export class SystemSettingsController {
       next(error);
     }
   }
+
+  async testOneSignalNotification(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { oneSignalService } = await import('../services/onesignal.service');
+      const userId = req.user!.userId;
+
+      // Enviar notificação de teste para o usuário atual
+      await oneSignalService.sendNotification({
+        title: '🔔 Teste de Notificação Push',
+        message: 'Esta é uma notificação de teste do OneSignal! Se você recebeu isso, as notificações push estão funcionando corretamente.',
+        userIds: [userId],
+        url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/bookings`,
+        data: {
+          type: 'TEST_NOTIFICATION',
+          timestamp: new Date().toISOString(),
+        },
+      });
+
+      res.json({ message: 'Notificação de teste enviada com sucesso! Verifique seu dispositivo.' });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 

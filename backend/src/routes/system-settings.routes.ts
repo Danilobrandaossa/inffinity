@@ -11,6 +11,7 @@ router.use(authenticate);
 // Rotas específicas do OneSignal (apenas admin)
 router.get('/onesignal', isAdmin, systemSettingsController.getOneSignalConfig.bind(systemSettingsController));
 router.put('/onesignal', isAdmin, systemSettingsController.setOneSignalConfig.bind(systemSettingsController));
+router.post('/onesignal/test', authenticate, systemSettingsController.testOneSignalNotification.bind(systemSettingsController)); // Qualquer usuário autenticado pode testar
 
 // Rotas gerais (apenas admin)
 router.get('/', isAdmin, systemSettingsController.getAll.bind(systemSettingsController));

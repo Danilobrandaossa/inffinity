@@ -231,9 +231,8 @@ export class BookingService {
     // 9. Enviar notificação push via OneSignal
     try {
       // Usar playerId diretamente se disponível, senão usar userId
-      const playerIds = (booking.user as any).onesignalPlayerId 
-        ? [(booking.user as any).onesignalPlayerId]
-        : undefined;
+      const userPlayerId = (booking.user as any)?.onesignalPlayerId;
+      const playerIds = userPlayerId ? [userPlayerId] : undefined;
       
       await oneSignalService.sendNotification({
         title: '✅ Reserva Confirmada',

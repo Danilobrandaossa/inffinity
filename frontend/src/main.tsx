@@ -9,7 +9,8 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutos
+      staleTime: 30 * 1000, // 30 segundos (mais rápido para atualizações)
+      gcTime: 5 * 60 * 1000, // 5 minutos (tempo de cache no garbage collector)
     },
   },
 });

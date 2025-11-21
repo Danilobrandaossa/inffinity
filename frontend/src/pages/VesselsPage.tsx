@@ -30,7 +30,11 @@ export default function VesselsPage() {
       return api.post('/vessels', data);
     },
     onSuccess: () => {
+      // Invalidar ambas as keys para garantir que todas as queries sejam atualizadas
+      queryClient.invalidateQueries({ queryKey: ['my-vessels'] });
       queryClient.invalidateQueries({ queryKey: ['vessels'] });
+      // Forçar refetch imediato
+      queryClient.refetchQueries({ queryKey: ['my-vessels'] });
       toast.success(editingVessel ? 'Embarcação atualizada!' : 'Embarcação criada!');
       setShowModal(false);
       setEditingVessel(null);
@@ -43,7 +47,11 @@ export default function VesselsPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/vessels/${id}`),
     onSuccess: () => {
+      // Invalidar ambas as keys para garantir que todas as queries sejam atualizadas
+      queryClient.invalidateQueries({ queryKey: ['my-vessels'] });
       queryClient.invalidateQueries({ queryKey: ['vessels'] });
+      // Forçar refetch imediato
+      queryClient.refetchQueries({ queryKey: ['my-vessels'] });
       toast.success('Embarcação excluída!');
     },
     onError: (error: any) => {

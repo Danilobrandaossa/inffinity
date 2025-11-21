@@ -7,10 +7,19 @@ export class SystemSettingsService {
    * Obter uma configuração por chave
    */
   async get(key: string): Promise<string | null> {
-    const setting = await prisma.systemSettings.findUnique({
-      where: { key },
-    });
-    return setting?.value || null;
+    try {
+      const setting = await prisma.systemSettings.findUnique({
+        where: { key },
+      });
+      return setting?.value || null;
+    } catch (error: any) {
+      // Se a tabela não existir, retornar null (configuração não encontrada)
+      if (error.code === 'P2021' || error.message?.includes('does not exist')) {
+        logger.warn('Tabela system_settings não existe ainda', { key });
+        return null;
+      }
+      throw error;
+    }
   }
 
   /**
@@ -62,13 +71,22 @@ export class SystemSettingsService {
    * Obter configurações do OneSignal
    */
   async getOneSignalConfig(): Promise<{ appId: string; restApiKey: string }> {
-    const appId = await this.get('ONESIGNAL_APP_ID');
-    const restApiKey = await this.get('ONESIGNAL_REST_API_KEY');
+    try {
+      const appId = await this.get('ONESIGNAL_APP_ID');
+      const restApiKey = await this.get('ONESIGNAL_REST_API_KEY');
 
-    return {
-      appId: appId || process.env.ONESIGNAL_APP_ID || '',
-      restApiKey: restApiKey || process.env.ONESIGNAL_REST_API_KEY || '',
-    };
+      return {
+        appId: appId || process.env.ONESIGNAL_APP_ID || '',
+        restApiKey: restApiKey || process.env.ONESIGNAL_REST_API_KEY || '',
+      };
+    } catch (error: any) {
+      // Se houver erro, retornar valores das variáveis de ambiente
+      logger.error('Erro ao buscar configurações do OneSignal', { error: error.message });
+      return {
+        appId: process.env.ONESIGNAL_APP_ID || '',
+        restApiKey: process.env.ONESIGNAL_REST_API_KEY || '',
+      };
+    }
   }
 
   /**

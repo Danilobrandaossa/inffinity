@@ -116,6 +116,14 @@ function App() {
               }
             />
             <Route
+              path="settings"
+              element={
+                <ProtectedRoute adminOnly>
+                  <SettingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="subscription-plans"
               element={
                 <ProtectedRoute adminOnly>

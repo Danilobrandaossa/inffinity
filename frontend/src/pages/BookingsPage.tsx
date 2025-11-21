@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Calendar as CalendarIcon, Plus, X, Ship, User, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, X, Ship, User, AlertCircle, Lock, Crown, Wrench } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import toast from 'react-hot-toast';
@@ -523,32 +523,30 @@ export default function BookingsPage() {
               {/* Legendas */}
               <div className="flex flex-wrap gap-2 sm:gap-4 mb-4 text-xs">
                 <div className="flex items-center">
-                  <div className="w-4 h-4 bg-green-500 rounded mr-1"></div>
-                  Disponível
+                  <div className="w-4 h-4 rounded mr-1" style={{ backgroundColor: '#F3F4F6' }}></div>
+                  Datas Livres
                 </div>
                 <div className="flex items-center">
-                  <div className="w-4 h-4 bg-blue-400 rounded mr-1"></div>
+                  <div className="w-4 h-4 bg-green-500 rounded mr-1"></div>
                   Reservado
                 </div>
                 <div className="flex items-center">
-                  <div className="w-4 h-4 bg-red-600 rounded mr-1"></div>
-                  Manutenção
-                </div>
-                <div className="flex items-center">
-                  <div className="w-4 h-4 bg-gray-900 rounded mr-1"></div>
+                  <div className="w-4 h-4 rounded mr-1 flex items-center justify-center" style={{ backgroundColor: 'rgb(17 24 39)' }}>
+                    <Crown className="w-3 h-3 text-white" />
+                  </div>
                   Sorteio
                 </div>
                 <div className="flex items-center">
-                  <div className="w-4 h-4 bg-orange-500 rounded mr-1"></div>
-                  Indisponível
+                  <div className="w-4 h-4 rounded mr-1 flex items-center justify-center" style={{ backgroundColor: 'rgb(220 38 38)' }}>
+                    <Wrench className="w-3 h-3 text-white" />
+                  </div>
+                  Manutenção
                 </div>
                 <div className="flex items-center">
-                  <div className="w-4 h-4 bg-gray-200 rounded mr-1"></div>
+                  <div className="w-4 h-4 bg-gray-200 rounded mr-1 flex items-center justify-center">
+                    <Lock className="w-3 h-3 text-gray-600" />
+                  </div>
                   Muito Distante
-                </div>
-                <div className="flex items-center">
-                  <div className="w-4 h-4 bg-purple-600 rounded mr-1"></div>
-                  Bloqueio Semanal
                 </div>
               </div>
 
@@ -691,16 +689,37 @@ export default function BookingsPage() {
                         }
                       }}
                       className={`
-                        aspect-square p-1 sm:p-2 text-xs sm:text-sm rounded-lg border transition-colors
+                        aspect-square p-1 sm:p-2 text-xs sm:text-sm rounded-lg border transition-colors relative
                         ${!isCurrentMonth ? 'opacity-30' : ''}
-                        ${bgColor}
                         ${textColor}
                         ${isCurrentMonth ? 'cursor-pointer' : 'cursor-default'}
                       `}
+                      style={{ 
+                        backgroundColor: bgColor.startsWith('#') || bgColor.startsWith('rgb') ? bgColor : undefined 
+                      }}
                       disabled={!isCurrentMonth}
                       title={title}
                     >
-                      <div>{format(day, 'd')}</div>
+                      <div className="flex items-center justify-center h-full">
+                        {isTooFarAhead ? (
+                          <div className="flex flex-col items-center">
+                            <div>{format(day, 'd')}</div>
+                            <Lock className="w-3 h-3 mt-0.5" />
+                          </div>
+                        ) : (blockedInfo || weeklyBlockInfo) && (blockedInfo?.reason === 'SORTEIO' || blockedInfo?.reason === 'DRAW' || weeklyBlockInfo?.reason === 'SORTEIO' || weeklyBlockInfo?.reason === 'DRAW') ? (
+                          <div className="flex flex-col items-center">
+                            <div>{format(day, 'd')}</div>
+                            <Crown className="w-3 h-3 mt-0.5" />
+                          </div>
+                        ) : (blockedInfo || weeklyBlockInfo) && (blockedInfo?.reason === 'MANUTENÇÃO' || blockedInfo?.reason === 'MAINTENANCE' || weeklyBlockInfo?.reason === 'MANUTENÇÃO' || weeklyBlockInfo?.reason === 'MAINTENANCE') ? (
+                          <div className="flex flex-col items-center">
+                            <div>{format(day, 'd')}</div>
+                            <Wrench className="w-3 h-3 mt-0.5" />
+                          </div>
+                        ) : (
+                          <div>{format(day, 'd')}</div>
+                        )}
+                      </div>
                     </button>
                   );
                 })}

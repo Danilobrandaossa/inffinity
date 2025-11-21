@@ -31,51 +31,7 @@ export default function MyFinancialsPage() {
     enabled: !!selectedVesselId,
   });
 
-  const mercadoPagoEnabled = Boolean(userData?.meta?.mercadoPagoEnabled);
-
-  const payWithMercadoPago = useMutation({
-    mutationFn: async ({ paymentType, paymentId }: { paymentType: string; paymentId: string }) => {
-      const baseUrl = window.location.origin;
-      const { data } = await api.post(
-        `/mercado-pago/payments/${paymentType}/${paymentId}/checkout`,
-        {
-          successUrl: `${baseUrl}/pagamentos/sucesso`,
-          failureUrl: `${baseUrl}/pagamentos/erro`,
-          pendingUrl: `${baseUrl}/pagamentos/pendente`,
-        },
-      );
-      return data?.data;
-    },
-    onSuccess: (response) => {
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: ['user-financials', user.id] });
-      }
-      if (selectedVesselId) {
-        queryClient.invalidateQueries({ queryKey: ['financial-history', selectedVesselId] });
-      }
-
-      const checkoutUrl = response?.initPoint || response?.sandboxInitPoint;
-      if (checkoutUrl) {
-        window.open(checkoutUrl, '_blank', 'noopener');
-        toast.success('Você será redirecionado ao Mercado Pago para concluir o pagamento.');
-      } else {
-        toast.error('Não foi possível obter o link de pagamento.');
-      }
-    },
-    onError: (error: any) => {
-      const status = error?.response?.status;
-      if (status === 503) {
-        toast.error('Integração com Mercado Pago indisponível. Contate o administrador.');
-      } else {
-        toast.error(
-          error?.response?.data?.message || 'Não foi possível iniciar o pagamento com Mercado Pago.',
-        );
-      }
-    },
-    onSettled: () => {
-      setCurrentPayment(null);
-    },
-  });
+  // Mercado Pago removido - funcionalidade desabilitada
 
   const formatCurrency = (value: number) =>
     `R$ ${Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
@@ -119,10 +75,7 @@ export default function MyFinancialsPage() {
     }
   };
 
-  const handlePayWithMercadoPago = (paymentType: string, paymentId: string) => {
-    setCurrentPayment({ id: paymentId, type: paymentType });
-    payWithMercadoPago.mutate({ paymentType, paymentId });
-  };
+  // Mercado Pago removido - funcionalidade desabilitada
 
   if (isLoading) {
     return (
@@ -361,12 +314,7 @@ export default function MyFinancialsPage() {
                           <div className="space-y-3">
                             {items.map((payment: any) => {
                               const providerStatusLabel = translateProviderStatus(payment.providerStatus);
-                              const isProcessing =
-                                payWithMercadoPago.isPending &&
-                                currentPayment?.id === payment.id &&
-                                currentPayment?.type === type;
-                              const canPayWithGateway =
-                                mercadoPagoEnabled && payment.status !== 'PAID';
+                              const canPayWithGateway = false; // Mercado Pago removido
 
                               return (
                                 <div
@@ -405,19 +353,9 @@ export default function MyFinancialsPage() {
                                     <p className="text-lg font-semibold text-gray-900">
                                       {formatCurrency(payment.amount)}
                                     </p>
-                                    {canPayWithGateway ? (
-                                      <button
-                                        onClick={() => handlePayWithMercadoPago(type, payment.id)}
-                                        className="btn btn-primary text-xs mt-2"
-                                        disabled={isProcessing}
-                                      >
-                                        {isProcessing ? 'Gerando checkout...' : 'Pagar com Mercado Pago'}
-                                      </button>
-                                    ) : !mercadoPagoEnabled ? (
-                                      <p className="text-xs text-gray-500 mt-2">
-                                        Pagamento on-line indisponível. Contate o administrador.
-                                      </p>
-                                    ) : null}
+                                    <p className="text-xs text-gray-500 mt-2">
+                                      Pagamento on-line indisponível.
+                                    </p>
                                   </div>
                                 </div>
                               );

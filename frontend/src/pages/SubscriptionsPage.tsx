@@ -440,7 +440,7 @@ export default function SubscriptionsPage() {
                   <div
                     key={plan.id}
                     className={`border rounded-lg p-4 ${
-                      selectedPlan === plan.id ? 'border-primary-500 shadow-md' : 'border-gray-200'
+                      selectedPlanId === plan.id ? 'border-primary-500 shadow-md' : 'border-gray-200'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -460,7 +460,7 @@ export default function SubscriptionsPage() {
                       </div>
                       <button
                         className="btn btn-outline px-3 py-1 text-sm"
-                        onClick={() => setSelectedPlan(plan.id)}
+                        onClick={() => setSelectedPlanId(plan.id)}
                       >
                         Escolher
                       </button>

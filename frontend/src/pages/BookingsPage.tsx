@@ -578,9 +578,10 @@ export default function BookingsPage() {
                   const isSelected = isAdmin && isMultiSelectMode && selectedDates.some(d => format(d, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
                   
                   
-                  // Usuário bloqueado não pode fazer reservas
-                  // Simplificar a lógica para permitir seleção de datas
-                  const canBook = !isBooked && !isDateBlocked && !isPast && !isTooFarAhead;
+                  // Verificar se pode reservar
+                  // Se a data está reservada por outro usuário (não-admin), não pode reservar
+                  const isBookedByOther = isBooked && !isAdmin && booking?.user?.id !== user?.id;
+                  const canBook = !isBookedByOther && !isDateBlocked && !isPast && !isTooFarAhead;
                   
                   
 
@@ -632,9 +633,22 @@ export default function BookingsPage() {
                       title = 'Data disponível';
                     }
                   } else if (isBooked) {
-                    bgColor = 'bg-green-500';
-                    textColor = 'text-white';
-                    title = `Reservado por ${booking?.user.name}`;
+                    // Verificar se a reserva é do próprio usuário ou de outro
+                    const isMyBooking = !isAdmin && booking?.user?.id === user?.id;
+                    
+                    if (isMyBooking) {
+                      // Reserva do próprio usuário - verde
+                      bgColor = 'bg-green-500';
+                      textColor = 'text-white';
+                      title = 'Reservado por você';
+                    } else {
+                      // Reserva de outro usuário - cinza escuro/desabilitado para não-admin
+                      bgColor = isAdmin ? 'bg-green-500' : 'bg-gray-400';
+                      textColor = 'text-white';
+                      title = isAdmin 
+                        ? `Reservado por ${booking?.user.name}` 
+                        : 'Data já reservada - Indisponível';
+                    }
                   } else {
                     // Datas livres
                     bgColor = '#F3F4F6';

@@ -15,6 +15,7 @@ enum UserRole {
   USER
 }
 
+
 enum UserStatus {
   ACTIVE
   OVERDUE
@@ -111,6 +112,7 @@ model User {
   auditLogs     AuditLog[]
   notifications UserNotification[]
   refreshTokens RefreshToken[]
+  subscriptions Subscription[]
 
   @@index([email])
   @@index([role])
@@ -307,6 +309,13 @@ model Installment {
   paymentDate     DateTime?     // Data do pagamento
   status          PaymentStatus @default(PENDING)
   notes           String?       // Observações
+  paymentProvider String?       // Provedor de pagamento externo (ex: MERCADO_PAGO)
+  providerPaymentId String?     // ID do pagamento no provedor
+  providerPreferenceId String?  // ID da preferência/checkout no provedor
+  providerStatus   String?      // Status reportado pelo provedor
+  providerInitPoint String?     // URL de checkout (produção)
+  providerSandboxInitPoint String? // URL de checkout (sandbox)
+  providerMetadata Json?        // Informações adicionais retornadas pelo provedor
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -314,6 +323,8 @@ model Installment {
   userVessel UserVessel @relation(fields: [userVesselId], references: [id], onDelete: Cascade)
 
   @@unique([userVesselId, installmentNumber])
+  @@index([providerPaymentId])
+  @@index([providerPreferenceId])
   @@index([userVesselId])
   @@index([dueDate])
   @@index([status])
@@ -328,12 +339,21 @@ model MarinaPayment {
   paymentDate  DateTime?     // Data do pagamento
   status       PaymentStatus @default(PENDING)
   notes        String?       // Observações
+  paymentProvider String?
+  providerPaymentId String?
+  providerPreferenceId String?
+  providerStatus   String?
+  providerInitPoint String?
+  providerSandboxInitPoint String?
+  providerMetadata Json?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
   // Relações
   userVessel UserVessel @relation(fields: [userVesselId], references: [id], onDelete: Cascade)
 
+  @@index([providerPaymentId])
+  @@index([providerPreferenceId])
   @@index([userVesselId])
   @@index([dueDate])
   @@index([status])
@@ -350,12 +370,21 @@ model AdHocCharge {
   status      PaymentStatus @default(PENDING)
   paymentDate DateTime?   // Data do pagamento
   notes       String?     // Observações do pagamento
+  paymentProvider String?
+  providerPaymentId String?
+  providerPreferenceId String?
+  providerStatus   String?
+  providerInitPoint String?
+  providerSandboxInitPoint String?
+  providerMetadata Json?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   // Relação
   userVessel  UserVessel  @relation(fields: [userVesselId], references: [id], onDelete: Cascade)
 
+  @@index([providerPaymentId])
+  @@index([providerPreferenceId])
   @@index([userVesselId])
   @@index([status])
   @@map("ad_hoc_charges")
@@ -374,4 +403,65 @@ model WeeklyBlock {
   @@index([isActive])
   @@map("weekly_blocks")
 }
+
+model SubscriptionPlan {
+  id                 String   @id @default(uuid())
+  mercadoPagoPlanId  String   @unique
+  name               String
+  description        String?
+  amount             Float
+  currencyId         String   @default("BRL")
+  frequency          Int
+  frequencyType      String
+  repetitions        Int?
+  billingDay         Int?
+  billingDayProportional Boolean @default(false)
+  freeTrialFrequency Int?
+  freeTrialFrequencyType String?
+  backUrl            String?
+  status             String   @default("active")
+  lateInterestPercent Float   @default(0)
+  penaltyPercent      Float   @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@index([status])
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id                     String   @id @default(uuid())
+  planId                 String
+  userId                 String
+  mercadoPagoSubscriptionId String? @unique
+  externalReference      String?
+  payerEmail             String
+  cardTokenId            String?
+  status                 String   @default("pending")
+  reason                 String?
+  startDate              DateTime?
+  endDate                DateTime?
+  lastChargedAt          DateTime?
+  nextChargeDate         DateTime?
+  cancelledAt            DateTime?
+  cancelReason           String?
+  metadata               Json?
+  providerPaymentId      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  plan SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([planId])
+  @@index([userId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+
 

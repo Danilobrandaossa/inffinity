@@ -111,7 +111,12 @@ export class VesselService {
 
   async findByUser(userId: string) {
     const userVessels = await prisma.userVessel.findMany({
-      where: { userId },
+      where: { 
+        userId,
+        vessel: {
+          isActive: true, // Apenas embarcações ativas
+        },
+      },
       include: {
         vessel: {
           include: {

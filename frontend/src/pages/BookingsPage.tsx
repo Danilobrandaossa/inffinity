@@ -63,7 +63,7 @@ export default function BookingsPage() {
       const { data } = await api.get(isAdmin ? '/vessels' : '/vessels/my-vessels');
       return data;
     },
-    staleTime: 0, // Sempre considerar stale para atualizações imediatas
+    staleTime: 30 * 1000, // 30 segundos - reduz requisições desnecessárias
   });
 
   // Buscar calendário da embarcação selecionada
@@ -81,7 +81,7 @@ export default function BookingsPage() {
       return data;
     },
     enabled: !!selectedVessel,
-    staleTime: 0, // Sempre considerar stale para atualizações imediatas
+    staleTime: 30 * 1000, // 30 segundos - reduz requisições desnecessárias
   });
 
   // Buscar todas as reservas (excluindo canceladas por padrão para evitar confusão)

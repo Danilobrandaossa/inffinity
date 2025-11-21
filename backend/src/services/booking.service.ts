@@ -117,16 +117,41 @@ export class BookingService {
     }
 
     // 7. Verificar se já existe reserva ATIVA para esta data (canceladas não contam)
-    const existingBooking = await prisma.booking.findFirst({
+    // Buscar todas as reservas para esta data e embarcação
+    const allBookingsForDate = await prisma.booking.findMany({
       where: {
         vesselId: data.vesselId,
         bookingDate: bookingDateTime,
-        status: { not: 'CANCELLED' }, // Ignorar reservas canceladas
+      },
+      select: {
+        id: true,
+        status: true,
+        userId: true,
       },
     });
 
-    if (existingBooking) {
+    // Verificar se existe alguma reserva ATIVA (não cancelada)
+    const activeBooking = allBookingsForDate.find(
+      (b) => b.status !== BookingStatus.CANCELLED
+    );
+
+    if (activeBooking) {
+      logger.warn('Tentativa de criar reserva em data ocupada', {
+        vesselId: data.vesselId,
+        bookingDate: bookingDateTime,
+        existingBookingId: activeBooking.id,
+        existingStatus: activeBooking.status,
+      });
       throw new AppError(409, 'Já existe uma reserva para esta data');
+    }
+
+    // Se só existem reservas canceladas, permitir criar nova reserva
+    if (allBookingsForDate.length > 0) {
+      logger.info('Permitindo nova reserva em data com reservas canceladas', {
+        vesselId: data.vesselId,
+        bookingDate: bookingDateTime,
+        cancelledCount: allBookingsForDate.filter(b => b.status === BookingStatus.CANCELLED).length,
+      });
     }
 
     // 7. Verificar limite de reservas ativas NESTA EMBARCAÇÃO

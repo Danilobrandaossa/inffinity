@@ -229,22 +229,21 @@ export default function BookingsPage() {
         return old.filter((b: any) => b.id !== response?.data?.id);
       });
 
-      // Atualizar calendário (mantém canceladas mas marca como canceladas)
+      // Remover do calendário também (canceladas não devem aparecer)
       if (selectedVessel && response?.data) {
         queryClient.setQueryData(['calendar', selectedVessel.id, currentMonth], (old: any) => {
-          if (!old) return old;
+          if (!old || !old.bookings) return old;
           return {
             ...old,
-            bookings: old.bookings.map((b: any) =>
-              b.id === response.data.id ? { ...b, status: 'CANCELLED' } : b
-            ),
+            bookings: old.bookings.filter((b: any) => b.id !== response.data.id)
           };
         });
       }
 
-      // Invalidar para garantir sincronização completa
+      // Invalidar e refetch para garantir sincronização completa
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      queryClient.invalidateQueries({ queryKey: ['calendar', selectedVessel?.id] });
+      queryClient.refetchQueries({ queryKey: ['calendar', selectedVessel?.id, currentMonth] });
       
       toast.success('Reserva cancelada!');
       setShowCancelModal(false);

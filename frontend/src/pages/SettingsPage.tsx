@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Settings, Save, Bell, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -17,11 +17,15 @@ export default function SettingsPage() {
       const { data } = await api.get('/system-settings/onesignal');
       return data;
     },
-    onSuccess: (data) => {
-      setAppId(data.appId || '');
-      setRestApiKey(data.restApiKey || '');
-    },
   });
+
+  // Atualizar estado quando os dados forem carregados
+  useEffect(() => {
+    if (oneSignalConfig) {
+      setAppId(oneSignalConfig.appId || '');
+      setRestApiKey(oneSignalConfig.restApiKey || '');
+    }
+  }, [oneSignalConfig]);
 
   // Mutation para atualizar configurações
   const updateMutation = useMutation({

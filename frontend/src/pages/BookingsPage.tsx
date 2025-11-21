@@ -663,6 +663,17 @@ export default function BookingsPage() {
                         // Não permitir interação com dias de outros meses
                         if (!isCurrentMonth) return;
                         
+                        // Não permitir reservar datas já reservadas por outros (para não-admin)
+                        if (!isAdmin && isBooked && booking?.user?.id !== user?.id) {
+                          toast.error('Esta data já está reservada por outro usuário');
+                          return;
+                        }
+                        
+                        // Não permitir reservar se não pode (datas passadas, bloqueadas, etc)
+                        if (!canBook && !isAdmin) {
+                          return;
+                        }
+                        
                         if (isAdmin && isMultiSelectMode) {
                           // Modo seleção múltipla para admin
                           const dateStr = format(day, 'yyyy-MM-dd');
@@ -694,12 +705,12 @@ export default function BookingsPage() {
                         aspect-square p-1 sm:p-2 text-xs sm:text-sm rounded-lg border transition-colors relative
                         ${!isCurrentMonth ? 'opacity-30' : ''}
                         ${textColor}
-                        ${isCurrentMonth ? 'cursor-pointer' : 'cursor-default'}
+                        ${(isCurrentMonth && !(!isAdmin && isBooked && booking?.user?.id !== user?.id)) ? 'cursor-pointer' : 'cursor-not-allowed'}
                       `}
                       style={{ 
                         backgroundColor: bgColor.startsWith('#') || bgColor.startsWith('rgb') ? bgColor : undefined 
                       }}
-                      disabled={!isCurrentMonth}
+                      disabled={!isCurrentMonth || (!isAdmin && isBooked && booking?.user?.id !== user?.id)}
                       title={title}
                     >
                       <div className="flex items-center justify-center h-full">

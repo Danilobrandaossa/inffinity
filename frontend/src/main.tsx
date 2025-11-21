@@ -33,7 +33,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// OneSignal será inicializado automaticamente após login via authStore
+// Inicializar OneSignal quando o app carregar (se usuário já estiver logado)
+// Também será inicializado após login via authStore
+if (localStorage.getItem('token')) {
+  setTimeout(() => {
+    oneSignalService.initialize().catch(console.error);
+  }, 2000); // Aguardar 2 segundos para garantir que o OneSignal SDK carregou
+}
 
 
 

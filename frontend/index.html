@@ -23,9 +23,22 @@
     <script>
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-          appId: "51feb7b0-8b6f-4f45-8b7b-4a2dd48a41a5",
-        });
+        try {
+          await OneSignal.init({
+            appId: "51feb7b0-8b6f-4f45-8b7b-4a2dd48a41a5",
+            // Configurações para melhor suporte mobile
+            allowLocalhostAsSecureOrigin: true,
+            notifyButton: {
+              enable: false, // Não mostrar botão padrão, vamos usar nosso próprio
+            },
+            // Solicitar permissão automaticamente
+            autoResubscribe: true,
+            autoRegister: true,
+          });
+          console.log('OneSignal SDK inicializado');
+        } catch (error) {
+          console.error('Erro ao inicializar OneSignal SDK:', error);
+        }
       });
     </script>
   </head>

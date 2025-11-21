@@ -21,7 +21,11 @@ export class OneSignalService {
   }
 
   async initialize(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {
+      // Mesmo se já inicializado, verificar e registrar player ID
+      await this.ensurePlayerIdRegistered();
+      return;
+    }
 
     try {
       // Aguardar OneSignal estar disponível
@@ -33,35 +37,69 @@ export class OneSignalService {
         return;
       }
 
-      // Verificar se já está inicializado
-      const isInitialized = await OneSignal.isPushNotificationsEnabled();
-      if (isInitialized) {
-        this.initialized = true;
-        return;
+      // Verificar se já está inscrito
+      const isSubscribed = await OneSignal.isPushNotificationsEnabled();
+      
+      if (!isSubscribed) {
+        // Solicitar permissão de notificação
+        try {
+          await OneSignal.showNativePrompt();
+        } catch (error) {
+          console.warn('Erro ao solicitar permissão de notificação:', error);
+        }
       }
 
-      // Solicitar permissão de notificação
-      await OneSignal.showNativePrompt();
+      // Aguardar um pouco para o player ID ser gerado
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Obter player ID e enviar para o backend
-      const playerId = await OneSignal.getUserId();
-      if (playerId) {
-        await this.registerPlayerId(playerId);
-      }
+      await this.ensurePlayerIdRegistered();
 
-      // Listener para quando o player ID mudar
+      // Listener para quando o player ID mudar ou subscription mudar
       OneSignal.on('subscriptionChange', async (isSubscribed: boolean) => {
+        console.log('OneSignal subscription changed:', isSubscribed);
         if (isSubscribed) {
-          const playerId = await OneSignal.getUserId();
-          if (playerId) {
-            await this.registerPlayerId(playerId);
-          }
+          await this.ensurePlayerIdRegistered();
         }
       });
 
+      // Listener para quando o player ID for obtido
+      OneSignal.on('permissionPromptDisplay', () => {
+        console.log('OneSignal permission prompt displayed');
+      });
+
       this.initialized = true;
+      console.log('OneSignal inicializado com sucesso');
     } catch (error) {
       console.error('Erro ao inicializar OneSignal:', error);
+    }
+  }
+
+  /**
+   * Garantir que o player ID está registrado no backend
+   */
+  private async ensurePlayerIdRegistered(): Promise<void> {
+    try {
+      await this.waitForOneSignal();
+      const OneSignal = window.OneSignal;
+      if (!OneSignal) return;
+
+      // Tentar obter player ID várias vezes (pode demorar para ser gerado)
+      let playerId: string | null = null;
+      for (let i = 0; i < 5; i++) {
+        playerId = await OneSignal.getUserId();
+        if (playerId) break;
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      if (playerId) {
+        console.log('OneSignal Player ID obtido:', playerId);
+        await this.registerPlayerId(playerId);
+      } else {
+        console.warn('OneSignal Player ID não disponível ainda');
+      }
+    } catch (error) {
+      console.error('Erro ao garantir registro do player ID:', error);
     }
   }
 

@@ -631,6 +631,9 @@ export default function BookingsPage() {
                     <button
                       key={idx}
                       onClick={() => {
+                        // Não permitir interação com dias de outros meses
+                        if (!isCurrentMonth) return;
+                        
                         if (isAdmin && isMultiSelectMode) {
                           // Modo seleção múltipla para admin
                           const dateStr = format(day, 'yyyy-MM-dd');

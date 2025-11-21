@@ -342,7 +342,7 @@ export class UserService {
   async updateOneSignalPlayerId(userId: string, playerId: string) {
     await prisma.user.update({
       where: { id: userId },
-      data: { onesignalPlayerId: playerId },
+      data: { onesignalPlayerId: playerId } as any, // Type assertion temporária até Prisma Client ser regenerado
     });
   }
 

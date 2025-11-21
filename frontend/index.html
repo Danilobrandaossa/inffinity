@@ -38,15 +38,13 @@
             // Solicitar permissão automaticamente
             autoResubscribe: true,
             autoRegister: true,
-            // Service Worker será gerenciado pelo OneSignal
-            serviceWorkerParam: {
-              scope: '/'
-            },
-            serviceWorkerPath: 'OneSignalSDKWorker.js'
+            // Service Worker será gerenciado automaticamente pelo OneSignal
+            // Não especificar serviceWorkerPath para usar o padrão do CDN
           });
           console.log('OneSignal SDK inicializado');
         } catch (error) {
           console.error('Erro ao inicializar OneSignal SDK:', error);
+          // Não bloquear a aplicação se OneSignal falhar
         }
       });
     </script>

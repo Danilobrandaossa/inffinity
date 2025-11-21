@@ -595,10 +595,17 @@ export default function BookingsPage() {
                   // Verificar se pode reservar
                   // Se a data está reservada por outro usuário (não-admin), não pode reservar
                   const isBookedByOther = isBooked && !isAdmin && booking?.user?.id !== user?.id;
-                  const canBook = !isBookedByOther && !isDateBlocked && !isPast && !isTooFarAhead;
                   
+                  // Verificar se a data está bloqueada por MANUTENÇÃO ou SORTEIO (bloqueios reais)
+                  const blockedInfo = getBlockedDateInfo(day);
+                  const weeklyBlockInfo = getWeeklyBlockInfo(day);
+                  const blockInfo = weeklyBlockInfo || blockedInfo;
+                  const isRealBlock = blockInfo && blockInfo.reason && 
+                    (blockInfo.reason === 'MANUTENÇÃO' || blockInfo.reason === 'MAINTENANCE' || 
+                     blockInfo.reason === 'SORTEIO' || blockInfo.reason === 'DRAW');
                   
-
+                  const canBook = !isBookedByOther && !isRealBlock && !isPast && !isTooFarAhead;
+                  
                   // Definir cores baseadas no tipo de bloqueio
                   let bgColor = '';
                   let textColor = 'text-white';
@@ -618,8 +625,6 @@ export default function BookingsPage() {
                     title = `Data muito distante (limite: ${maxDaysAhead} dias)`;
                   } else if (isDateBlocked) {
                     // Priorizar bloqueio semanal sobre bloqueio específico
-                    const blockInfo = weeklyBlockInfo || blockedInfo;
-                    
                     if (blockInfo && blockInfo.reason) {
                       switch (blockInfo.reason) {
                       case 'MANUTENÇÃO':

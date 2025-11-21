@@ -4,6 +4,12 @@ import { logger } from '../utils/logger';
 import { prisma } from '../utils/prisma';
 import { SystemSettingsService } from './system-settings.service';
 
+// Helper para codificar Basic Auth corretamente
+function encodeBasicAuth(apiKey: string): string {
+  // OneSignal usa ":" (dois pontos) como username e a REST API Key como password
+  return Buffer.from(`:${apiKey}`).toString('base64');
+}
+
 export class OneSignalService {
   private readonly apiUrl = 'https://onesignal.com/api/v1';
   private systemSettingsService = new SystemSettingsService();
@@ -73,14 +79,16 @@ export class OneSignalService {
         ...(data.data && { data: data.data }),
       };
 
+      // OneSignal REST API v1 usa Basic Auth - username vazio (:) e REST API Key como password
+      const authHeader = encodeBasicAuth(restApiKey);
+
       const response = await axios.post(
         `${this.apiUrl}/notifications`,
         payload,
         {
           headers: {
             'Content-Type': 'application/json',
-            // OneSignal REST API v1 usa Basic Auth com a REST API Key como password
-            Authorization: `Basic ${restApiKey}`,
+            Authorization: `Basic ${authHeader}`,
           },
         }
       );

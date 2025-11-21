@@ -5,38 +5,71 @@ import { config } from '../config';
 import { AppError } from '../middleware/error-handler';
 import { UserRole } from '@prisma/client';
 import { JWTPayload } from '../middleware/auth';
+import { logger } from '../utils/logger';
 
 export class AuthService {
   async login(email: string, password: string, ip?: string) {
     // Normalizar email (lowercase)
     const normalizedEmail = email.toLowerCase().trim();
     
+    logger.info('[AUTH] Login attempt', { 
+      email: normalizedEmail, 
+      ip,
+      timestamp: new Date().toISOString()
+    });
+    
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
 
     if (!user) {
-      // Log para debug (não expor no erro final)
-      console.log(`[AUTH] Login failed: User not found for email: ${normalizedEmail}`);
+      logger.warn('[AUTH] Login failed: User not found', { 
+        email: normalizedEmail,
+        ip,
+        timestamp: new Date().toISOString()
+      });
       throw new AppError(401, 'Credenciais inválidas');
     }
 
     if (!user.isActive) {
-      console.log(`[AUTH] Login failed: User ${user.id} is inactive`);
+      logger.warn('[AUTH] Login failed: User inactive', { 
+        userId: user.id,
+        email: normalizedEmail,
+        ip,
+        timestamp: new Date().toISOString()
+      });
       throw new AppError(401, 'Credenciais inválidas');
     }
 
     // Verificar se a senha está definida
     if (!user.password) {
-      console.log(`[AUTH] Login failed: User ${user.id} has no password set`);
+      logger.warn('[AUTH] Login failed: User has no password', { 
+        userId: user.id,
+        email: normalizedEmail,
+        ip,
+        timestamp: new Date().toISOString()
+      });
       throw new AppError(401, 'Credenciais inválidas');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      console.log(`[AUTH] Login failed: Invalid password for user ${user.id}`);
+      logger.warn('[AUTH] Login failed: Invalid password', { 
+        userId: user.id,
+        email: normalizedEmail,
+        ip,
+        timestamp: new Date().toISOString()
+      });
       throw new AppError(401, 'Credenciais inválidas');
     }
+
+    logger.info('[AUTH] Login successful', { 
+      userId: user.id,
+      email: normalizedEmail,
+      role: user.role,
+      ip,
+      timestamp: new Date().toISOString()
+    });
 
     // Atualizar último login
     await prisma.user.update({

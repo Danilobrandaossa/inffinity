@@ -59,6 +59,7 @@ export default function UsersPage() {
       toast.success(editingUser ? 'Usuário atualizado!' : 'Usuário criado!');
       setShowModal(false);
       setEditingUser(null);
+      setVesselFinancials([]); // Limpar estado ao salvar
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Erro ao salvar usuário');
@@ -105,14 +106,32 @@ export default function UsersPage() {
         data.password = formData.get('password');
       }
       data.role = formData.get('role');
-      data.vesselFinancials = vesselFinancials.filter(f => 
-        f.totalValue > 0 || f.downPayment > 0 || f.totalInstallments > 0 || f.marinaMonthlyFee > 0
-      );
+      // Sempre enviar vesselFinancials com todas as embarcações selecionadas
+      // O backend aceita valores 0 (zero) e ainda cria a vinculação
+      if (vesselFinancials.length > 0) {
+        data.vesselFinancials = vesselFinancials.map(f => ({
+          vesselId: f.vesselId,
+          totalValue: f.totalValue || 0,
+          downPayment: f.downPayment || 0,
+          totalInstallments: f.totalInstallments || 0,
+          marinaMonthlyFee: f.marinaMonthlyFee || 0,
+          marinaDueDay: f.marinaDueDay || 5
+        }));
+      }
     } else {
       data.status = formData.get('status');
-      data.vesselFinancials = vesselFinancials.filter(f => 
-        f.totalValue > 0 || f.downPayment > 0 || f.totalInstallments > 0 || f.marinaMonthlyFee > 0
-      );
+      // Sempre enviar vesselFinancials com todas as embarcações selecionadas
+      // O backend aceita valores 0 (zero) e ainda cria a vinculação
+      if (vesselFinancials.length > 0) {
+        data.vesselFinancials = vesselFinancials.map(f => ({
+          vesselId: f.vesselId,
+          totalValue: f.totalValue || 0,
+          downPayment: f.downPayment || 0,
+          totalInstallments: f.totalInstallments || 0,
+          marinaMonthlyFee: f.marinaMonthlyFee || 0,
+          marinaDueDay: f.marinaDueDay || 5
+        }));
+      }
     }
     createMutation.mutate(data);
   };
@@ -579,7 +598,11 @@ export default function UsersPage() {
                 </div>
               </div>
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => { setShowModal(false); setEditingUser(null); }} className="flex-1 btn btn-outline">
+                <button type="button" onClick={() => { 
+                  setShowModal(false); 
+                  setEditingUser(null); 
+                  setVesselFinancials([]); // Limpar estado ao cancelar
+                }} className="flex-1 btn btn-outline">
                   Cancelar
                 </button>
                 <button type="submit" disabled={createMutation.isPending} className="flex-1 btn btn-primary">

@@ -304,7 +304,9 @@ export default function BookingsPage() {
   const getDaysInMonth = () => {
     const start = startOfMonth(currentMonth);
     const end = endOfMonth(currentMonth);
-    return eachDayOfInterval({ start, end });
+    const days = eachDayOfInterval({ start, end });
+    // Normalizar todas as datas para início do dia no timezone local
+    return days.map(day => startOfDay(day));
   };
 
   const isDateBooked = (date: Date) => {
@@ -628,9 +630,8 @@ export default function BookingsPage() {
                           }
                         } else {
                           // Modo normal - abrir modal de reserva
-                          // Normalizar data para início do dia no timezone local (evita problemas de timezone)
-                          const normalizedDate = startOfDay(day);
-                          setSelectedDate(normalizedDate);
+                          // day já está normalizado em getDaysInMonth, mas garantir normalização aqui também
+                          setSelectedDate(day);
                           if (isAdmin) {
                             setShowAdminModal(true);
                           } else {

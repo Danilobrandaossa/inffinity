@@ -55,6 +55,7 @@ export default function UsersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.refetchQueries({ queryKey: ['users'] });
       toast.success(editingUser ? 'Usuário atualizado!' : 'Usuário criado!');
       setShowModal(false);
       setEditingUser(null);
@@ -68,6 +69,7 @@ export default function UsersPage() {
     mutationFn: (id: string) => api.delete(`/users/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.refetchQueries({ queryKey: ['users'] });
       toast.success('Usuário excluído!');
     },
   });

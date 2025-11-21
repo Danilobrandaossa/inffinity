@@ -23,6 +23,7 @@ export default function DashboardPage() {
       const { data } = await api.get(isAdmin ? '/vessels' : '/vessels/my-vessels');
       return data;
     },
+    staleTime: 0, // Sempre considerar stale para atualizações imediatas
   });
 
   const { data: bookings } = useQuery({
@@ -31,6 +32,7 @@ export default function DashboardPage() {
       const { data } = await api.get('/bookings');
       return data;
     },
+    staleTime: 0, // Sempre considerar stale para atualizações imediatas
   });
 
   const { data: users } = useQuery({
@@ -40,6 +42,7 @@ export default function DashboardPage() {
       return data;
     },
     enabled: isAdmin,
+    staleTime: 0, // Sempre considerar stale para atualizações imediatas
   });
 
   const { data: notifications } = useQuery({
@@ -48,6 +51,7 @@ export default function DashboardPage() {
       const { data } = await api.get('/notifications/my-notifications');
       return data;
     },
+    staleTime: 0, // Sempre considerar stale para atualizações imediatas
   });
 
   const activeBookings = bookings?.filter((b: any) => 

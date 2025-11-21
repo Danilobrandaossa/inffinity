@@ -34,6 +34,7 @@ export default function BookingsPage() {
       const { data } = await api.get(isAdmin ? '/vessels' : '/vessels/my-vessels');
       return data;
     },
+    staleTime: 0, // Sempre considerar stale para atualizações imediatas
   });
 
   // Buscar calendário da embarcação selecionada
@@ -51,6 +52,7 @@ export default function BookingsPage() {
       return data;
     },
     enabled: !!selectedVessel,
+    staleTime: 0, // Sempre considerar stale para atualizações imediatas
   });
 
   // Buscar todas as reservas
@@ -60,6 +62,7 @@ export default function BookingsPage() {
       const { data } = await api.get('/bookings');
       return data;
     },
+    staleTime: 0, // Sempre considerar stale para atualizações imediatas
   });
 
   // Criar reserva
@@ -67,14 +70,85 @@ export default function BookingsPage() {
     mutationFn: async (data: any) => {
       return api.post('/bookings', data);
     },
-    onSuccess: () => {
+    // Atualização otimista - adiciona à UI imediatamente
+    onMutate: async (newBooking) => {
+      await queryClient.cancelQueries({ queryKey: ['bookings'] });
+      await queryClient.cancelQueries({ queryKey: ['calendar'] });
+
+      const previousBookings = queryClient.getQueryData(['bookings']);
+      const previousCalendar = selectedVessel 
+        ? queryClient.getQueryData(['calendar', selectedVessel.id, currentMonth])
+        : null;
+
+      // Adicionar reserva temporária à lista
+      const tempBooking = {
+        id: `temp-${Date.now()}`,
+        ...newBooking,
+        vessel: selectedVessel,
+        user: user,
+        status: 'PENDING',
+        createdAt: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData(['bookings'], (old: any) => {
+        return old ? [tempBooking, ...old] : [tempBooking];
+      });
+
+      // Atualizar calendário também
+      if (selectedVessel) {
+        queryClient.setQueryData(['calendar', selectedVessel.id, currentMonth], (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            bookings: [...(old.bookings || []), tempBooking],
+          };
+        });
+      }
+
+      return { previousBookings, previousCalendar };
+    },
+    onSuccess: (response) => {
+      // Substituir reserva temporária pela real da API
+      if (response?.data) {
+        queryClient.setQueryData(['bookings'], (old: any) => {
+          if (!old) return [response.data];
+          return old.map((b: any) => 
+            b.id?.toString().startsWith('temp-') ? response.data : b
+          );
+        });
+
+        // Atualizar calendário também
+        if (selectedVessel) {
+          queryClient.setQueryData(['calendar', selectedVessel.id, currentMonth], (old: any) => {
+            if (!old) return old;
+            return {
+              ...old,
+              bookings: old.bookings.map((b: any) =>
+                b.id?.toString().startsWith('temp-') ? response.data : b
+              ),
+            };
+          });
+        }
+      }
+
+      // Invalidar e refetch para garantir sincronização
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      queryClient.refetchQueries({ queryKey: ['bookings'] });
+      queryClient.refetchQueries({ queryKey: ['calendar'] });
+      
       toast.success('Reserva criada com sucesso!');
       setShowModal(false);
       setSelectedDate(null);
     },
-    onError: (error: any) => {
+    onError: (error: any, newBooking, context) => {
+      // Reverter para valor anterior em caso de erro
+      if (context?.previousBookings) {
+        queryClient.setQueryData(['bookings'], context.previousBookings);
+      }
+      if (context?.previousCalendar && selectedVessel) {
+        queryClient.setQueryData(['calendar', selectedVessel.id, currentMonth], context.previousCalendar);
+      }
       toast.error(error.response?.data?.error || 'Erro ao criar reserva');
     },
   });
@@ -114,9 +188,11 @@ export default function BookingsPage() {
       return { previousBookings };
     },
     onSuccess: () => {
-      // Invalidar para garantir sincronização
+      // Invalidar e refetch para garantir sincronização
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      queryClient.refetchQueries({ queryKey: ['bookings'] });
+      queryClient.refetchQueries({ queryKey: ['calendar'] });
       toast.success('Reserva cancelada!');
       setShowCancelModal(false);
       setBookingToCancel(null);

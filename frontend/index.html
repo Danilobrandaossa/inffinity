@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/boat.svg" />
+    <link rel="icon" type="image/png" href="/icons/icon-192x192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Sistema de Agendamento de Embarcações" />
     <meta name="theme-color" content="#3b82f6" />
@@ -24,6 +25,9 @@
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
         try {
+          // Aguardar um pouco para garantir que o SDK está totalmente carregado
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
           await OneSignal.init({
             appId: "51feb7b0-8b6f-4f45-8b7b-4a2dd48a41a5",
             // Configurações para melhor suporte mobile
@@ -34,6 +38,11 @@
             // Solicitar permissão automaticamente
             autoResubscribe: true,
             autoRegister: true,
+            // Service Worker será gerenciado pelo OneSignal
+            serviceWorkerParam: {
+              scope: '/'
+            },
+            serviceWorkerPath: 'OneSignalSDKWorker.js'
           });
           console.log('OneSignal SDK inicializado');
         } catch (error) {

@@ -203,11 +203,14 @@ model Booking {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   vessel Vessel @relation(fields: [vesselId], references: [id], onDelete: Cascade)
 
-  @@unique([vesselId, bookingDate])
+  // Removida constraint única para permitir múltiplas reservas na mesma data
+  // (uma cancelada e outra ativa). A verificação de disponibilidade é feita
+  // no código considerando apenas reservas não canceladas.
   @@index([userId])
   @@index([vesselId])
   @@index([bookingDate])
   @@index([status])
+  @@index([vesselId, bookingDate, status]) // Índice composto para busca eficiente
   @@map("bookings")
 }
 

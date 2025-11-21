@@ -349,10 +349,15 @@ export default function BookingsPage() {
   };
 
   const isDateBooked = (date: Date) => {
-    if (!calendar) return false;
-    return calendar.bookings.some((b: any) => 
-      isSameDay(parseBookingDate(b.bookingDate), date) && b.status !== 'CANCELLED'
-    );
+    if (!calendar || !calendar.bookings) return false;
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const isBooked = calendar.bookings.some((b: any) => {
+      if (!b || !b.bookingDate) return false;
+      const bookingDateStr = format(parseBookingDate(b.bookingDate), 'yyyy-MM-dd');
+      const matches = bookingDateStr === dateStr && b.status !== 'CANCELLED';
+      return matches;
+    });
+    return isBooked;
   };
 
   const getBlockedDateInfo = (date: Date) => {

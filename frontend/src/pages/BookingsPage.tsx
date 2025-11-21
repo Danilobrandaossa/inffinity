@@ -532,6 +532,9 @@ export default function BookingsPage() {
                 ))}
                 
                 {days.map((day, idx) => {
+                  // Verificar se o dia pertence ao mês atual
+                  const isCurrentMonth = isSameMonth(day, currentMonth);
+                  
                   const isBooked = isDateBooked(day);
                   const blockedInfo = getBlockedDateInfo(day);
                   const weeklyBlockInfo = getWeeklyBlockInfo(day);
@@ -651,11 +654,12 @@ export default function BookingsPage() {
                       }}
                       className={`
                         aspect-square p-1 sm:p-2 text-xs sm:text-sm rounded-lg border transition-colors
-                        ${!isSameMonth(day, currentMonth) ? 'opacity-30' : ''}
+                        ${!isCurrentMonth ? 'opacity-30' : ''}
                         ${bgColor}
                         ${textColor}
-                        cursor-pointer
+                        ${isCurrentMonth ? 'cursor-pointer' : 'cursor-default'}
                       `}
+                      disabled={!isCurrentMonth}
                       title={title}
                     >
                       <div>{format(day, 'd')}</div>

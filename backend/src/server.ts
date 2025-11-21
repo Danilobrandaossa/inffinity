@@ -21,7 +21,6 @@ import adHocChargeRoutes from './routes/ad-hoc-charge.routes';
 import weeklyBlockRoutes from './routes/weekly-block.routes';
 import twoFactorRoutes from './routes/two-factor.routes';
 import analyticsRoutes from './routes/analytics.routes';
-import mercadoPagoRoutes from './routes/mercado-pago.routes';
 import subscriptionPlanRoutes from './routes/subscription-plan.routes';
 import subscriptionRoutes from './routes/subscription.routes';
 import { initSubscriptionBillingJob } from './jobs/subscription-billing.job';
@@ -124,7 +123,6 @@ app.use('/api/ad-hoc-charges', adHocChargeRoutes);
 app.use('/api/weekly-blocks', weeklyBlockRoutes);
 app.use('/api/two-factor', twoFactorRoutes);
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/mercado-pago', mercadoPagoRoutes);
 app.use('/api/subscription-plans', subscriptionPlanRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 

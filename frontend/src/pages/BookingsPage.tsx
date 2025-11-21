@@ -165,7 +165,7 @@ export default function BookingsPage() {
   const isDateBooked = (date: Date) => {
     if (!calendar) return false;
     return calendar.bookings.some((b: any) => 
-      isSameDay(new Date(b.bookingDate), date)
+      isSameDay(new Date(b.bookingDate), date) && b.status !== 'CANCELLED'
     );
   };
 
@@ -191,13 +191,15 @@ export default function BookingsPage() {
   };
 
   const isDateBlocked = (date: Date) => {
-    return getBlockedDateInfo(date) !== null;
+    const blockedInfo = getBlockedDateInfo(date);
+    const weeklyBlockInfo = getWeeklyBlockInfo(date);
+    return blockedInfo !== null || weeklyBlockInfo !== null;
   };
 
   const getBookingForDate = (date: Date) => {
     if (!calendar) return null;
     return calendar.bookings.find((b: any) => 
-      isSameDay(new Date(b.bookingDate), date)
+      isSameDay(new Date(b.bookingDate), date) && b.status !== 'CANCELLED'
     );
   };
 
@@ -417,7 +419,8 @@ export default function BookingsPage() {
                     const blockInfo = weeklyBlockInfo || blockedInfo;
                     const blockType = weeklyBlockInfo ? 'SEMANAL' : 'ESPECÍFICO';
                     
-                    switch (blockInfo.reason) {
+                    if (blockInfo && blockInfo.reason) {
+                      switch (blockInfo.reason) {
                       case 'MANUTENÇÃO':
                       case 'MAINTENANCE':
                         bgColor = 'bg-red-600';
@@ -444,6 +447,11 @@ export default function BookingsPage() {
                       default:
                         bgColor = 'bg-gray-600';
                         title = `Bloqueado (${blockType})${blockInfo.notes ? ': ' + blockInfo.notes : ''}`;
+                    }
+                    } else {
+                      // Fallback para quando blockInfo não existe
+                      bgColor = 'bg-gray-600';
+                      title = `Bloqueado (${blockType})`;
                     }
                   } else if (isBooked) {
                     bgColor = 'bg-blue-400';

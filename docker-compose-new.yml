@@ -1,0 +1,99 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: reservapro_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: reservapro_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ReservaPro2024!Secure}
+      POSTGRES_DB: reservapro_db
+    ports:
+      - "5433:5432"  # Porta externa alterada para evitar conflitos
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - reservapro_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reservapro_user -d reservapro_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: reservapro_backend
+    restart: unless-stopped
+    ports:
+      - "3011:3011"  # Porta alterada para 3011
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: postgresql://reservapro_user:${DB_PASSWORD:-ReservaPro2024!Secure}@postgres:5432/reservapro_db
+      JWT_SECRET: ${JWT_SECRET:-ReservaPro-JWT-Super-Secure-Key-2024-Production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-ReservaPro-Refresh-Super-Secure-Key-2024-Production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      PORT: 3011
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3010}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3010}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Segurança adicional
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+      SESSION_SECRET: ${SESSION_SECRET:-ReservaPro-Session-Secret-2024}
+      API_KEY: ${API_KEY:-ReservaPro-API-Key-2024-Secure}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+    networks:
+      - reservapro_network
+    command: npm run dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3011/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: reservapro_frontend
+    restart: unless-stopped
+    ports:
+      - "3010:3010"  # Porta alterada para 3010
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3011/api}
+      VITE_APP_NAME: ${VITE_APP_NAME:-ReservaPro}
+      VITE_APP_VERSION: ${VITE_APP_VERSION:-1.0.0}
+      VITE_ENVIRONMENT: ${NODE_ENV:-production}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - reservapro_network
+    command: npm run dev -- --host 0.0.0.0 --port 3010
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3010"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  reservapro_network:
+    driver: bridge
+
+
+
+
+

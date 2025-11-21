@@ -33,39 +33,39 @@ export default function PWAInstallBanner() {
   }, []);
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 max-w-md mx-auto">
-      <div className="bg-white rounded-lg shadow-lg border p-4">
-        <div className="flex items-start space-x-3">
+    <div className="fixed bottom-4 left-4 right-4 z-50 max-w-sm mx-auto">
+      <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-xl border border-gray-200/50 p-4 animate-in slide-in-from-bottom-4 duration-300">
+        <div className="flex items-center space-x-3">
           <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-              <Smartphone className="w-5 h-5 text-primary-600" />
+            <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center shadow-sm">
+              <Smartphone className="w-4 h-4 text-white" />
             </div>
           </div>
           
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-medium text-gray-900">
-              Instalar App
+            <h3 className="text-sm font-semibold text-gray-900">
+              📱 Instalar App
             </h3>
-            <p className="text-xs text-gray-600 mt-1">
-              Instale o app para acesso rápido e notificações offline
+            <p className="text-xs text-gray-600 mt-0.5">
+              Acesso rápido e notificações
             </p>
+          </div>
+          
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={handleInstall}
+              className="bg-primary-600 hover:bg-primary-700 text-white text-xs px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1 shadow-sm hover:shadow-md"
+            >
+              <Download className="w-3 h-3" />
+              <span>Instalar</span>
+            </button>
             
-            <div className="flex space-x-2 mt-3">
-              <button
-                onClick={handleInstall}
-                className="flex-1 bg-primary-600 text-white text-xs px-3 py-2 rounded-md hover:bg-primary-700 transition-colors flex items-center justify-center space-x-1"
-              >
-                <Download className="w-3 h-3" />
-                <span>Instalar</span>
-              </button>
-              
-              <button
-                onClick={handleDismiss}
-                className="px-3 py-2 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+            <button
+              onClick={handleDismiss}
+              className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
+            >
+              <X className="w-3 h-3" />
+            </button>
           </div>
         </div>
       </div>

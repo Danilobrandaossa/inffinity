@@ -1,0 +1,58 @@
+# COMANDOS PARA EXECUTAR DIRETO NO SERVIDOR
+# Você já está conectado, então execute direto:
+
+# 1. Ir para o diretório do projeto
+cd /opt/embarcacoes
+
+# 2. Ver status atual (antes de atualizar)
+echo "=== STATUS ATUAL ==="
+git log -1 --oneline
+git status
+
+# 3. Atualizar código do GitHub
+echo ""
+echo "=== ATUALIZANDO CÓDIGO ==="
+git pull origin main
+
+# 4. Verificar que foi atualizado
+echo ""
+echo "=== VERIFICANDO ATUALIZAÇÃO ==="
+git log -1 --oneline
+# Deve mostrar: 1d068cb feat: adiciona campos de integração Mercado Pago...
+
+# 5. Verificar migrations pendentes
+echo ""
+echo "=== VERIFICANDO MIGRATIONS ==="
+docker-compose -f docker-compose.prod.yml exec backend npx prisma migrate status
+
+# 6. Aplicar migrations (criar nova migration e aplicar)
+echo ""
+echo "=== APLICANDO MIGRATIONS ==="
+docker-compose -f docker-compose.prod.yml exec backend npx prisma migrate dev --name add_mercado_pago_fields
+
+# 7. Verificar status das migrations novamente
+echo ""
+echo "=== VERIFICANDO STATUS FINAL ==="
+docker-compose -f docker-compose.prod.yml exec backend npx prisma migrate status
+
+# 8. Verificar logs do backend (para ver erros)
+echo ""
+echo "=== LOGS DO BACKEND (últimas 20 linhas) ==="
+docker-compose -f docker-compose.prod.yml logs --tail=20 backend
+
+# 9. Verificar containers
+echo ""
+echo "=== STATUS DOS CONTAINERS ==="
+docker-compose -f docker-compose.prod.yml ps
+
+# 10. Reiniciar backend (se necessário)
+echo ""
+echo "=== REINICIANDO BACKEND ==="
+docker-compose -f docker-compose.prod.yml restart backend
+
+# 11. Health check do backend
+echo ""
+echo "=== HEALTH CHECK ==="
+sleep 5
+docker-compose -f docker-compose.prod.yml exec backend curl http://localhost:3001/health || echo "Backend ainda não respondeu"
+

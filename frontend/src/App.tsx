@@ -20,6 +20,8 @@ import WeeklyBlocksPage from './pages/WeeklyBlocksPage';
 import TwoFactorPage from './pages/TwoFactorPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import FinancialPriorityPage from './pages/FinancialPriorityPage';
+import SubscriptionPlansPage from './pages/SubscriptionPlansPage';
+import SubscriptionsPage from './pages/SubscriptionsPage';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -69,6 +71,7 @@ function App() {
             <Route path="profile" element={<ProfilePage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="my-financials" element={<MyFinancialsPage />} />
+            <Route path="subscriptions" element={<SubscriptionsPage />} />
 
             {/* Admin Only Routes */}
             <Route
@@ -108,6 +111,14 @@ function App() {
               element={
                 <ProtectedRoute adminOnly>
                   <NotificationManagementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="subscription-plans"
+              element={
+                <ProtectedRoute adminOnly>
+                  <SubscriptionPlansPage />
                 </ProtectedRoute>
               }
             />

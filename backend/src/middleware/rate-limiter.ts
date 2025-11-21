@@ -11,7 +11,7 @@ export const rateLimiter = rateLimit({
 
 export const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // 5 tentativas
+  max: 50, // 50 tentativas para desenvolvimento
   message: 'Muitas tentativas de login, tente novamente em 15 minutos.',
   skipSuccessfulRequests: true,
 });

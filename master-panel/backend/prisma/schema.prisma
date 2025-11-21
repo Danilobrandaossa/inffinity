@@ -1,0 +1,246 @@
+// Schema específico para o Painel Master ReservaPro
+// Este schema contém apenas as tabelas necessárias para o controle Master
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== ENUMS =====
+
+enum MasterRole {
+  MASTER_OWNER
+  MASTER_SUPPORT
+  MASTER_AUDITOR
+}
+
+enum TenantRole {
+  TENANT_OWNER
+  TENANT_ADMIN
+  TENANT_EDITOR
+  TENANT_READONLY
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+  TRIAL
+}
+
+enum PlanType {
+  BASIC
+  PRO
+  PREMIUM
+}
+
+// ===== MODELS =====
+
+model MasterUser {
+  id                String      @id @default(uuid())
+  email             String      @unique
+  name              String
+  password          String
+  role              MasterRole  @default(MASTER_SUPPORT)
+  isActive          Boolean     @default(true)
+  twoFactorSecret   String?
+  twoFactorEnabled  Boolean     @default(false)
+  recoveryCodes     String[]    @default([])
+  allowedIPs        String[]    @default([])
+  lastLoginAt       DateTime?
+  lastLoginIp       String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relações
+  sessions          MasterSession[]
+  auditLogs         MasterAuditLog[]
+  impersonations    Impersonation[]
+
+  @@index([email])
+  @@index([role])
+  @@map("master_users")
+}
+
+model Tenant {
+  id                String        @id @default(uuid())
+  name              String
+  slug              String        @unique
+  domain            String?       @unique
+  subdomain         String?       @unique
+  email             String
+  phone             String?
+  address           String?
+  city              String?
+  state             String?
+  zipCode           String?
+  country           String        @default("BR")
+  logoUrl           String?
+  website           String?
+  description       String?
+  status            TenantStatus  @default(TRIAL)
+  planId            String?
+  trialEndsAt       DateTime?
+  billingEmail      String?
+  settings          Json          @default("{}")
+  whitelabelConfig  Json          @default("{}")
+  schemaName        String        @unique
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relações
+  plan              Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
+  users             TenantUser[]
+  auditLogs         MasterAuditLog[]
+  metrics           TenantMetrics[]
+  impersonations    Impersonation[]
+
+  @@index([slug])
+  @@index([domain])
+  @@index([subdomain])
+  @@index([status])
+  @@index([planId])
+  @@index([schemaName])
+  @@map("tenants")
+}
+
+model Plan {
+  id                    String   @id @default(uuid())
+  name                  String
+  type                  PlanType
+  description           String?
+  price                 Float    @default(0)
+  billingCycle          String   @default("monthly")
+  maxUsers              Int      @default(10)
+  maxVessels            Int      @default(5)
+  maxBookingsPerMonth   Int      @default(100)
+  features              Json     @default("{}")
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relações
+  tenants               Tenant[]
+
+  @@index([type])
+  @@index([isActive])
+  @@map("plans")
+}
+
+model TenantUser {
+  id                String      @id @default(uuid())
+  tenantId          String
+  email             String
+  name              String
+  role              TenantRole  @default(TENANT_READONLY)
+  isActive          Boolean     @default(true)
+  lastLoginAt       DateTime?
+  lastLoginIp       String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relações
+  tenant            Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([email])
+  @@index([role])
+  @@map("tenant_users")
+}
+
+model MasterSession {
+  id            String      @id @default(uuid())
+  masterUserId  String
+  token         String      @unique
+  expiresAt     DateTime
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime    @default(now())
+
+  // Relações
+  masterUser    MasterUser  @relation(fields: [masterUserId], references: [id], onDelete: Cascade)
+
+  @@index([masterUserId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("master_sessions")
+}
+
+model MasterAuditLog {
+  id            String      @id @default(uuid())
+  masterUserId  String
+  tenantId      String?
+  action        String
+  entityType    String?
+  entityId      String?
+  details       Json?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime    @default(now())
+
+  // Relações
+  masterUser    MasterUser  @relation(fields: [masterUserId], references: [id], onDelete: Cascade)
+  tenant        Tenant?     @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([masterUserId])
+  @@index([tenantId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("master_audit_logs")
+}
+
+model Impersonation {
+  id            String      @id @default(uuid())
+  masterUserId  String
+  tenantId      String
+  targetUserId  String?
+  startedAt     DateTime    @default(now())
+  endedAt       DateTime?
+  ipAddress     String?
+  userAgent     String?
+
+  // Relações
+  masterUser    MasterUser  @relation(fields: [masterUserId], references: [id], onDelete: Cascade)
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([masterUserId])
+  @@index([tenantId])
+  @@index([startedAt])
+  @@map("impersonations")
+}
+
+model TenantMetrics {
+  id                String      @id @default(uuid())
+  tenantId          String
+  date              DateTime
+  activeUsers       Int         @default(0)
+  totalBookings     Int         @default(0)
+  completedBookings Int         @default(0)
+  cancelledBookings Int         @default(0)
+  revenue           Float       @default(0)
+  errors4xx         Int         @default(0)
+  errors5xx         Int         @default(0)
+  avgResponseTime   Float       @default(0)
+  createdAt         DateTime    @default(now())
+
+  // Relações
+  tenant            Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, date])
+  @@index([tenantId])
+  @@index([date])
+  @@map("tenant_metrics")
+}
+
+
+
+
+
+
+
+

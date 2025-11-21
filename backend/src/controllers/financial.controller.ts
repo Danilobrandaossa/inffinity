@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { FinancialService } from '../services/financial.service';
 import { logger } from '../utils/logger';
+import { config } from '../config';
 
 const financialService = new FinancialService();
 
@@ -55,7 +56,7 @@ export class FinancialController {
 
       res.json({
         success: true,
-        data: financialInfo
+        data: financialInfo,
       });
     } catch (error) {
       logger.error('Erro ao buscar informações financeiras:', error);
@@ -82,7 +83,7 @@ export class FinancialController {
 
       res.json({
         success: true,
-        data: financialInfo
+        data: financialInfo,
       });
     } catch (error) {
       logger.error('Erro ao buscar informações financeiras:', error);

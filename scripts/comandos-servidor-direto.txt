@@ -1,0 +1,33 @@
+# COMANDOS PARA EXECUTAR DIRETO NO SERVIDOR
+# Você já está conectado via SSH, então execute estes comandos:
+
+# 1. Procurar o projeto em locais comuns
+echo "=== Procurando em /opt ==="
+ls -la /opt/ | grep -i embarcacao
+ls -la /opt/ | grep -i inffinity
+
+echo ""
+echo "=== Procurando em /root ==="
+ls -la /root/ | grep -i embarcacao
+ls -la /root/ | grep -i inffinity
+
+echo ""
+echo "=== Procurando em /var/www ==="
+ls -la /var/www/ 2>/dev/null | grep -i embarcacao
+
+echo ""
+echo "=== Procurando por package.json do backend ==="
+find /opt /root /var/www -name "package.json" -path "*/backend/*" 2>/dev/null | head -5
+
+echo ""
+echo "=== Procurando por docker-compose.yml ==="
+find /opt /root /var/www -name "docker-compose*.yml" 2>/dev/null
+
+echo ""
+echo "=== Verificar containers Docker rodando ==="
+docker ps 2>/dev/null | grep -E "backend|frontend|postgres|nginx"
+
+echo ""
+echo "=== Ver volumes Docker ==="
+docker volume ls 2>/dev/null | grep -i embarcacao
+

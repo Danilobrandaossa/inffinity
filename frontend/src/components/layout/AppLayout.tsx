@@ -19,7 +19,9 @@ import {
   Clock,
   Shield,
   BarChart3,
-  Zap
+  Zap,
+  Layers,
+  Repeat
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import api from '@/lib/api';
@@ -52,9 +54,11 @@ export default function AppLayout() {
     { name: 'Embarcações', href: '/vessels', icon: Ship, show: true },
     { name: 'Agendamentos', href: '/bookings', icon: Calendar, show: true },
     { name: 'Minhas Finanças', href: '/my-financials', icon: CreditCard, show: !isAdmin },
+    { name: 'Minhas Assinaturas', href: '/subscriptions', icon: Repeat, show: true },
     { name: 'Histórico', href: '/audit-logs', icon: FileText, show: true },
     { name: '⚡ Painel Financeiro', href: '/financial-priority', icon: Zap, show: isAdmin },
     { name: 'Controle Financeiro', href: '/financial', icon: DollarSign, show: isAdmin },
+    { name: 'Planos de Assinatura', href: '/subscription-plans', icon: Layers, show: isAdmin },
     { name: 'Gerenciar Notificações', href: '/notification-management', icon: MessageSquare, show: isAdmin },
     { name: 'Usuários', href: '/users', icon: Users, show: isAdmin },
     { name: 'Bloqueios', href: '/blocked-dates', icon: ShieldBan, show: isAdmin },
@@ -81,10 +85,15 @@ export default function AppLayout() {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 border-b">
-            <div className="flex items-center space-x-2">
-              <Ship className="w-8 h-8 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900">Embarcações</span>
+          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
+                <Ship className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <span className="text-lg font-bold text-gray-900">Sistema de</span>
+                <span className="text-lg font-bold text-primary-600 block">Embarcações</span>
+              </div>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -95,20 +104,22 @@ export default function AppLayout() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
             {navigation.map((item) => 
               item.show ? (
                 <Link
                   key={item.name}
                   to={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                     location.pathname === item.href
-                      ? 'bg-primary-50 text-primary-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-primary-600 text-white shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
-                  <item.icon className="w-5 h-5 mr-3" />
+                  <item.icon className={`w-5 h-5 mr-3 ${
+                    location.pathname === item.href ? 'text-white' : 'text-gray-500'
+                  }`} />
                   {item.name}
                 </Link>
               ) : null
@@ -116,15 +127,15 @@ export default function AppLayout() {
           </nav>
 
           {/* User menu */}
-          <div className="p-4 border-t">
-            <div className="flex items-center mb-3">
+          <div className="p-4 border-t border-gray-200">
+            <div className="flex items-center mb-4">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-                  <User className="w-6 h-6 text-primary-600" />
+                <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center">
+                  <User className="w-6 h-6 text-white" />
                 </div>
               </div>
               <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
+                <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
                 <p className="text-xs text-gray-500 truncate">{user?.email}</p>
               </div>
             </div>
@@ -135,7 +146,7 @@ export default function AppLayout() {
                 className="flex items-center justify-between px-4 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <div className="flex items-center">
-                  <Bell className="w-5 h-5 mr-3" />
+                  <Bell className="w-5 h-5 mr-3 text-gray-500" />
                   Notificações
                 </div>
                 {unreadCount > 0 && (
@@ -149,7 +160,7 @@ export default function AppLayout() {
                 onClick={() => setSidebarOpen(false)}
                 className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
               >
-                <User className="w-5 h-5 mr-3" />
+                <User className="w-5 h-5 mr-3 text-gray-500" />
                 Perfil
               </Link>
               <button
@@ -167,14 +178,21 @@ export default function AppLayout() {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top bar */}
-        <header className="bg-white shadow-sm sticky top-0 z-10">
+        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6">
+            <div className="flex items-center space-x-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden text-gray-500 hover:text-gray-700"
+                className="lg:hidden text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100"
             >
               <Menu className="w-6 h-6" />
             </button>
+              <div className="hidden lg:block">
+                <h1 className="text-lg font-semibold text-gray-900">
+                  {navigation.find(item => item.href === location.pathname)?.name || 'Dashboard'}
+                </h1>
+              </div>
+            </div>
             
             <div className="flex items-center space-x-4 ml-auto">
               {/* Badge de notificações */}
@@ -191,7 +209,7 @@ export default function AppLayout() {
               )}
               
               {isAdmin && (
-                <span className="hidden sm:inline-flex px-3 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-800">
+                <span className="hidden sm:inline-flex px-3 py-1 text-xs font-medium rounded-full bg-primary-600 text-white">
                   Administrador
                 </span>
               )}
@@ -200,8 +218,10 @@ export default function AppLayout() {
         </header>
 
         {/* Page content */}
-        <main className="p-4 sm:p-6 lg:p-8">
+        <main className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
+          <div className="max-w-7xl mx-auto">
           <Outlet />
+          </div>
         </main>
       </div>
       

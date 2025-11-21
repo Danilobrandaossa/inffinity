@@ -2,11 +2,9 @@ import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/error-handler';
 import { BookingStatus } from '@prisma/client';
 import { startOfDay, isBefore, isAfter, differenceInHours, addDays } from 'date-fns';
-import { WebhookService } from './webhook.service';
 import { WeeklyBlockService } from './weekly-block.service';
 import { logger } from '../utils/logger';
 
-const webhookService = new WebhookService();
 const weeklyBlockService = new WeeklyBlockService();
 
 export class BookingService {
@@ -205,7 +203,7 @@ export class BookingService {
 
     // 9. Enviar notificação WhatsApp via webhook
     try {
-      await webhookService.sendBookingCreated(booking);
+      // Webhook removido
     } catch (error) {
       logger.error('Erro ao enviar webhook:', error);
       // Não bloquear a criação da reserva se o webhook falhar
@@ -400,7 +398,7 @@ export class BookingService {
 
     // Enviar notificação WhatsApp via webhook
     try {
-      await webhookService.sendBookingCancelled(updatedBooking, reason);
+      // Webhook removido
     } catch (error) {
       logger.error('Erro ao enviar webhook:', error);
     }

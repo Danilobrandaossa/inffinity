@@ -1,0 +1,209 @@
+{
+  "name": "Sistema Embarcações - WhatsApp Notificações",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agendamentos",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-reservas",
+      "name": "Webhook Reservas",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "agendamentos-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.event }}",
+              "rightValue": "booking_created",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "condition-nova-reserva",
+      "name": "Nova Reserva?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-2",
+              "leftValue": "={{ $json.event }}",
+              "rightValue": "booking_cancelled",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "condition-cancelamento",
+      "name": "Cancelamento?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 500]
+    },
+    {
+      "parameters": {
+        "message": "🚢 *Nova Reserva Confirmada!*\n\n👤 *Cotista:* {{ $json.user.name }}\n📞 *Telefone:* {{ $json.user.phone }}\n\n⛵ *Embarcação:* {{ $json.vessel.name }}\n📅 *Data do Agendamento:* {{ $json.booking.bookingDate }}\n🕐 *Horário:* {{ $json.booking.startTime }} - {{ $json.booking.endTime }}\n\n✅ *Status:* {{ $json.booking.status }}\n\nObrigado por escolher nossos serviços! 🌊",
+        "additionalFields": {}
+      },
+      "id": "whatsapp-nova-reserva",
+      "name": "WhatsApp - Nova Reserva",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [680, 200]
+    },
+    {
+      "parameters": {
+        "message": "❌ *Reserva Cancelada*\n\n👤 *Cotista:* {{ $json.user.name }}\n📞 *Telefone:* {{ $json.user.phone }}\n\n⛵ *Embarcação:* {{ $json.vessel.name }}\n📅 *Data do Agendamento:* {{ $json.booking.bookingDate }}\n🕐 *Horário:* {{ $json.booking.startTime }} - {{ $json.booking.endTime }}\n\n❌ *Status:* CANCELADO\n\nSe precisar reagendar, entre em contato conosco! 📞",
+        "additionalFields": {}
+      },
+      "id": "whatsapp-cancelamento",
+      "name": "WhatsApp - Cancelamento",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [680, 600]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Notificação enviada com sucesso\", \"event\": $json.event, \"timestamp\": $now, \"user\": $json.user.name, \"vessel\": $json.vessel.name } }}"
+      },
+      "id": "response-success",
+      "name": "Resposta Sucesso",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": false, \"message\": \"Evento não reconhecido\", \"event\": $json.event, \"timestamp\": $now } }}"
+      },
+      "id": "response-error",
+      "name": "Resposta Erro",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 700]
+    }
+  ],
+  "connections": {
+    "webhook-reservas": {
+      "main": [
+        [
+          {
+            "node": "condition-nova-reserva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "condition-nova-reserva": {
+      "main": [
+        [
+          {
+            "node": "whatsapp-nova-reserva",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "condition-cancelamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "condition-cancelamento": {
+      "main": [
+        [
+          {
+            "node": "whatsapp-cancelamento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "response-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "whatsapp-nova-reserva": {
+      "main": [
+        [
+          {
+            "node": "response-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "whatsapp-cancelamento": {
+      "main": [
+        [
+          {
+            "node": "response-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-10-25T17:00:00.000Z",
+  "versionId": "1"
+}
+
+
+
+
+
+
+
+

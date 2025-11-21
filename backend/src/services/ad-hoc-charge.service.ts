@@ -244,6 +244,9 @@ export class AdHocChargeService {
         dueDate: i.dueDate,
         paymentDate: i.paymentDate,
         notes: i.notes,
+        paymentProvider: i.paymentProvider,
+        providerStatus: i.providerStatus,
+        providerPaymentId: i.providerPaymentId,
         createdAt: i.createdAt,
         updatedAt: i.updatedAt
       })),
@@ -257,6 +260,9 @@ export class AdHocChargeService {
         dueDate: m.dueDate,
         paymentDate: m.paymentDate,
         notes: m.notes,
+        paymentProvider: m.paymentProvider,
+        providerStatus: m.providerStatus,
+        providerPaymentId: m.providerPaymentId,
         createdAt: m.createdAt,
         updatedAt: m.updatedAt
       })),
@@ -270,6 +276,9 @@ export class AdHocChargeService {
         dueDate: a.dueDate,
         paymentDate: a.paymentDate,
         notes: a.notes,
+        paymentProvider: a.paymentProvider,
+        providerStatus: a.providerStatus,
+        providerPaymentId: a.providerPaymentId,
         createdAt: a.createdAt,
         updatedAt: a.updatedAt
       }))

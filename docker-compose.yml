@@ -31,8 +31,6 @@ services:
       JWT_REFRESH_SECRET: seu-refresh-secret-super-seguro-altere-em-producao
       PORT: 3001
       FRONTEND_URL: http://localhost:3000
-      N8N_WEBHOOK_URL: http://n8n:5678/webhook/agendamentos
-      N8N_WEBHOOK_TOKEN: seu-webhook-token
     depends_on:
       - postgres
     volumes:
@@ -51,35 +49,17 @@ services:
     ports:
       - "3000:3000"
     environment:
-      VITE_API_URL: http://192.168.15.21:3001/api
+      VITE_API_URL: /api
     volumes:
       - ./frontend:/app
       - /app/node_modules
     networks:
       - embarcacoes_network
-    command: npm run dev
+    command: npm run dev -- --host 0.0.0.0
 
-  n8n:
-    image: n8nio/n8n:latest
-    container_name: embarcacoes_n8n
-    restart: unless-stopped
-    ports:
-      - "5678:5678"
-    environment:
-      N8N_BASIC_AUTH_ACTIVE: "true"
-      N8N_BASIC_AUTH_USER: admin
-      N8N_BASIC_AUTH_PASSWORD: admin123
-      N8N_HOST: 0.0.0.0
-      N8N_PORT: 5678
-      WEBHOOK_URL: http://n8n:5678/
-    volumes:
-      - n8n_data:/home/node/.n8n
-    networks:
-      - embarcacoes_network
 
 volumes:
   postgres_data:
-  n8n_data:
 
 networks:
   embarcacoes_network:

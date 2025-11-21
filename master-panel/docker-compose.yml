@@ -1,0 +1,100 @@
+services:
+  # Banco de dados PostgreSQL para Master Panel
+  master-postgres:
+    image: postgres:15-alpine
+    container_name: master-panel-postgres
+    environment:
+      POSTGRES_DB: master_panel_db
+      POSTGRES_USER: master_user
+      POSTGRES_PASSWORD: ${MASTER_DB_PASSWORD:-MasterPanel2024!Secure}
+    ports:
+      - "5434:5432"  # Porta externa 5434 para evitar conflitos
+    volumes:
+      - master_postgres_data:/var/lib/postgresql/data
+    networks:
+      - master-panel-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U master_user -d master_panel_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend Master Panel
+  master-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: master-panel-backend
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3012  # Porta alterada para 3012
+      DATABASE_URL: postgresql://master_user:${MASTER_DB_PASSWORD:-MasterPanel2024!Secure}@master-postgres:5432/master_panel_db
+      JWT_SECRET: ${MASTER_JWT_SECRET:-Master-Panel-JWT-Super-Secure-Key-2024}
+      JWT_EXPIRES_IN: ${MASTER_JWT_EXPIRES_IN:-8h}
+      CORS_ORIGIN: ${MASTER_CORS_ORIGIN:-http://localhost:3013}
+      LOG_LEVEL: ${MASTER_LOG_LEVEL:-info}
+      # Conexão com sistema principal
+      MAIN_SYSTEM_URL: ${MAIN_SYSTEM_URL:-http://localhost:3011}
+      MAIN_SYSTEM_API_KEY: ${MAIN_SYSTEM_API_KEY:-Master-Panel-API-Key-2024-Secure}
+      # Segurança adicional
+      BCRYPT_ROUNDS: ${MASTER_BCRYPT_ROUNDS:-12}
+      SESSION_SECRET: ${MASTER_SESSION_SECRET:-Master-Panel-Session-Secret-2024}
+      RATE_LIMIT_WINDOW_MS: ${MASTER_RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX_REQUESTS: ${MASTER_RATE_LIMIT_MAX_REQUESTS:-50}
+    ports:
+      - "3012:3012"  # Porta alterada para 3012
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+    depends_on:
+      master-postgres:
+        condition: service_healthy
+    networks:
+      - master-panel-network
+    restart: unless-stopped
+    command: npm run dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3012/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend Master Panel
+  master-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: master-panel-frontend
+    environment:
+      VITE_API_URL: ${MASTER_VITE_API_URL:-http://localhost:3012}
+      VITE_APP_NAME: ${MASTER_VITE_APP_NAME:-ReservaPro Master Panel}
+      VITE_MAIN_SYSTEM_URL: ${MASTER_VITE_MAIN_SYSTEM_URL:-http://localhost:3010}
+      VITE_APP_VERSION: ${MASTER_VITE_APP_VERSION:-1.0.0}
+      VITE_ENVIRONMENT: ${NODE_ENV:-production}
+    ports:
+      - "3013:3010"  # Porta externa 3013, interna 3010
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      master-backend:
+        condition: service_healthy
+    networks:
+      - master-panel-network
+    restart: unless-stopped
+    command: npm run dev -- --host 0.0.0.0 --port 3010
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3010"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  master_postgres_data:
+    driver: local
+
+networks:
+  master-panel-network:
+    driver: bridge

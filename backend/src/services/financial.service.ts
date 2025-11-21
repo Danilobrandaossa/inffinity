@@ -1,10 +1,46 @@
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error-handler';
 import { addMonths, startOfMonth, isAfter, isBefore, addDays, differenceInDays } from 'date-fns';
+import { logger } from '../utils/logger';
 
 const prisma = new PrismaClient();
 
 export class FinancialService {
+  private readonly mercadoPagoProvider = 'MERCADO_PAGO';
+
+  private resetProviderFields() {
+    return {
+      paymentProvider: null,
+      providerPaymentId: null,
+      providerPreferenceId: null,
+      providerStatus: null,
+      providerInitPoint: null,
+      providerSandboxInitPoint: null,
+      providerMetadata: null,
+    };
+  }
+
+  private appendNote(existing: string | null | undefined, message: string) {
+    if (!message) {
+      return existing ?? null;
+    }
+    if (!existing) {
+      return message;
+    }
+    if (existing.includes(message)) {
+      return existing;
+    }
+    return `${existing}\n${message}`;
+  }
+
+  private mergeProviderMetadata(existing: any, patch: Record<string, any>) {
+    const base = (existing && typeof existing === 'object') ? existing : {};
+    return {
+      ...base,
+      ...patch,
+    };
+  }
+
   // Criar/atualizar informações financeiras de uma embarcação
   async updateVesselFinancials(
     userVesselId: string,
@@ -126,7 +162,8 @@ export class FinancialService {
       data: {
         paymentDate,
         status: 'PAID',
-        notes
+        notes,
+        ...this.resetProviderFields(),
       }
     });
 
@@ -151,7 +188,8 @@ export class FinancialService {
       data: {
         paymentDate,
         status: 'PAID',
-        notes
+        notes,
+        ...this.resetProviderFields(),
       }
     });
   }
@@ -442,7 +480,8 @@ export class FinancialService {
         data: {
           status: 'PAID',
           paymentDate: data.paymentDate,
-          notes: data.notes
+          notes: data.notes,
+          ...this.resetProviderFields(),
         }
       });
 
@@ -486,7 +525,8 @@ export class FinancialService {
         data: {
           status: 'PAID',
           paymentDate: data.paymentDate,
-          notes: data.notes
+          notes: data.notes,
+          ...this.resetProviderFields(),
         }
       });
 
@@ -599,6 +639,8 @@ export class FinancialService {
         amount: inst.amount,
         dueDate: inst.dueDate,
         status: inst.status,
+        paymentProvider: inst.paymentProvider,
+        providerStatus: inst.providerStatus,
         description: `Parcela ${inst.installmentNumber}/${inst.userVessel.totalInstallments || '?'}`,
         installmentNumber: inst.installmentNumber,
         totalInstallments: inst.userVessel.totalInstallments
@@ -614,6 +656,8 @@ export class FinancialService {
         amount: marina.amount,
         dueDate: marina.dueDate,
         status: marina.status,
+        paymentProvider: marina.paymentProvider,
+        providerStatus: marina.providerStatus,
         description: `Marina ${(marina as any).referenceMonth}`,
         referenceMonth: (marina as any).referenceMonth
       })),
@@ -628,6 +672,8 @@ export class FinancialService {
         amount: charge.amount,
         dueDate: charge.dueDate || today,
         status: charge.status,
+        paymentProvider: charge.paymentProvider,
+        providerStatus: charge.providerStatus,
         description: charge.description,
         chargeType: (charge as any).chargeType
       }))
@@ -684,7 +730,8 @@ export class FinancialService {
         where: { id: paymentId },
         data: {
           status: 'PAID',
-          paymentDate: today
+          paymentDate: today,
+          ...this.resetProviderFields(),
         }
       });
     }
@@ -706,7 +753,8 @@ export class FinancialService {
         where: { id: paymentId },
         data: {
           status: 'PAID',
-          paymentDate: today
+          paymentDate: today,
+          ...this.resetProviderFields(),
         }
       });
     }
@@ -728,11 +776,271 @@ export class FinancialService {
         where: { id: paymentId },
         data: {
           status: 'PAID',
-          paymentDate: today
+          paymentDate: today,
+          ...this.resetProviderFields(),
         }
       });
     }
 
     throw new AppError(400, 'Tipo de pagamento inválido');
+  }
+
+  async applyProviderStatus(params: {
+    paymentType: 'installment' | 'marina' | 'adhoc';
+    paymentId: string;
+    providerPaymentId?: string;
+    providerStatus: string;
+    providerStatusDetail?: string;
+    paidAt?: Date;
+    metadata?: any;
+  }) {
+    const { paymentType } = params;
+    switch (paymentType) {
+      case 'installment':
+        await this.applyProviderStatusToInstallment(params);
+        break;
+      case 'marina':
+        await this.applyProviderStatusToMarina(params);
+        break;
+      case 'adhoc':
+        await this.applyProviderStatusToAdHoc(params);
+        break;
+      default:
+        break;
+    }
+  }
+
+  private async applyProviderStatusToInstallment(params: {
+    paymentId: string;
+    providerPaymentId?: string;
+    providerStatus: string;
+    providerStatusDetail?: string;
+    paidAt?: Date;
+    metadata?: any;
+  }) {
+    const installment = await prisma.installment.findUnique({
+      where: { id: params.paymentId },
+      include: {
+        userVessel: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    if (!installment) {
+      logger.warn('Parcela não encontrada ao aplicar status do provedor', {
+        paymentId: params.paymentId,
+      });
+      return;
+    }
+
+    const metadata = this.mergeProviderMetadata(installment.providerMetadata, {
+      lastUpdateAt: new Date().toISOString(),
+      provider: this.mercadoPagoProvider,
+      statusDetail: params.providerStatusDetail,
+      raw: params.metadata,
+    });
+
+    const updateData: any = {
+      paymentProvider: this.mercadoPagoProvider,
+      providerPaymentId: params.providerPaymentId,
+      providerStatus: params.providerStatus,
+      providerMetadata: metadata,
+    };
+
+    if (params.providerStatus === 'approved') {
+      if (installment.status !== 'PAID') {
+        updateData.status = 'PAID';
+        updateData.paymentDate = params.paidAt ?? new Date();
+        updateData.notes = this.appendNote(
+          installment.notes,
+          'Pagamento confirmado automaticamente via Mercado Pago.',
+        );
+      }
+    } else if (['rejected', 'cancelled', 'refunded', 'charged_back'].includes(params.providerStatus)) {
+      updateData.notes = this.appendNote(
+        installment.notes,
+        `Status Mercado Pago: ${params.providerStatusDetail || params.providerStatus}`,
+      );
+      if (installment.status === 'PAID') {
+        updateData.status = 'PENDING';
+        updateData.paymentDate = null;
+      }
+    } else {
+      updateData.notes = this.appendNote(
+        installment.notes,
+        `Status Mercado Pago: ${params.providerStatus}`,
+      );
+    }
+
+    await prisma.installment.update({
+      where: { id: params.paymentId },
+      data: updateData,
+    });
+
+    if (params.providerStatus === 'approved' && installment.status !== 'PAID') {
+      const newRemainingAmount = Math.max(
+        0,
+        installment.userVessel.remainingAmount - installment.amount,
+      );
+      await prisma.userVessel.update({
+        where: { id: installment.userVesselId },
+        data: {
+          remainingAmount: newRemainingAmount,
+        },
+      });
+
+      await this.checkVesselPaidOff(installment.userVesselId);
+    }
+
+    await this.updateUserStatus(installment.userVessel.userId);
+  }
+
+  private async applyProviderStatusToMarina(params: {
+    paymentId: string;
+    providerPaymentId?: string;
+    providerStatus: string;
+    providerStatusDetail?: string;
+    paidAt?: Date;
+    metadata?: any;
+  }) {
+    const marinaPayment = await prisma.marinaPayment.findUnique({
+      where: { id: params.paymentId },
+      include: {
+        userVessel: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    if (!marinaPayment) {
+      logger.warn('Mensalidade de marina não encontrada ao aplicar status do provedor', {
+        paymentId: params.paymentId,
+      });
+      return;
+    }
+
+    const metadata = this.mergeProviderMetadata(marinaPayment.providerMetadata, {
+      lastUpdateAt: new Date().toISOString(),
+      provider: this.mercadoPagoProvider,
+      statusDetail: params.providerStatusDetail,
+      raw: params.metadata,
+    });
+
+    const updateData: any = {
+      paymentProvider: this.mercadoPagoProvider,
+      providerPaymentId: params.providerPaymentId,
+      providerStatus: params.providerStatus,
+      providerMetadata: metadata,
+    };
+
+    if (params.providerStatus === 'approved') {
+      if (marinaPayment.status !== 'PAID') {
+        updateData.status = 'PAID';
+        updateData.paymentDate = params.paidAt ?? new Date();
+        updateData.notes = this.appendNote(
+          marinaPayment.notes,
+          'Pagamento confirmado automaticamente via Mercado Pago.',
+        );
+      }
+    } else if (['rejected', 'cancelled', 'refunded', 'charged_back'].includes(params.providerStatus)) {
+      updateData.notes = this.appendNote(
+        marinaPayment.notes,
+        `Status Mercado Pago: ${params.providerStatusDetail || params.providerStatus}`,
+      );
+      if (marinaPayment.status === 'PAID') {
+        updateData.status = 'PENDING';
+        updateData.paymentDate = null;
+      }
+    } else {
+      updateData.notes = this.appendNote(
+        marinaPayment.notes,
+        `Status Mercado Pago: ${params.providerStatus}`,
+      );
+    }
+
+    await prisma.marinaPayment.update({
+      where: { id: params.paymentId },
+      data: updateData,
+    });
+
+    await this.updateUserStatus(marinaPayment.userVessel.userId);
+  }
+
+  private async applyProviderStatusToAdHoc(params: {
+    paymentId: string;
+    providerPaymentId?: string;
+    providerStatus: string;
+    providerStatusDetail?: string;
+    paidAt?: Date;
+    metadata?: any;
+  }) {
+    const charge = await prisma.adHocCharge.findUnique({
+      where: { id: params.paymentId },
+      include: {
+        userVessel: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    if (!charge) {
+      logger.warn('Cobrança avulsa não encontrada ao aplicar status do provedor', {
+        paymentId: params.paymentId,
+      });
+      return;
+    }
+
+    const metadata = this.mergeProviderMetadata(charge.providerMetadata, {
+      lastUpdateAt: new Date().toISOString(),
+      provider: this.mercadoPagoProvider,
+      statusDetail: params.providerStatusDetail,
+      raw: params.metadata,
+    });
+
+    const updateData: any = {
+      paymentProvider: this.mercadoPagoProvider,
+      providerPaymentId: params.providerPaymentId,
+      providerStatus: params.providerStatus,
+      providerMetadata: metadata,
+    };
+
+    if (params.providerStatus === 'approved') {
+      if (charge.status !== 'PAID') {
+        updateData.status = 'PAID';
+        updateData.paymentDate = params.paidAt ?? new Date();
+        updateData.notes = this.appendNote(
+          charge.notes,
+          'Pagamento confirmado automaticamente via Mercado Pago.',
+        );
+      }
+    } else if (['rejected', 'cancelled', 'refunded', 'charged_back'].includes(params.providerStatus)) {
+      updateData.notes = this.appendNote(
+        charge.notes,
+        `Status Mercado Pago: ${params.providerStatusDetail || params.providerStatus}`,
+      );
+      if (charge.status === 'PAID') {
+        updateData.status = 'PENDING';
+        updateData.paymentDate = null;
+      }
+    } else {
+      updateData.notes = this.appendNote(
+        charge.notes,
+        `Status Mercado Pago: ${params.providerStatus}`,
+      );
+    }
+
+    await prisma.adHocCharge.update({
+      where: { id: params.paymentId },
+      data: updateData,
+    });
+
+    await this.updateUserStatus(charge.userVessel.userId);
   }
 }

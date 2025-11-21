@@ -25,6 +25,13 @@ SaaS completo para gestão de agendamentos de embarcações com acesso diferenci
 - ✅ Grupos por embarcação para admins
 - ✅ Mensagens individuais para clientes
 
+### 💳 Integração de Pagamentos (Mercado Pago)
+- ✅ Geração automática de checkout para parcelas, taxas de marina e cobranças avulsas
+- ✅ Atualização de status via webhooks (pagamentos aprovados, pendentes ou recusados)
+- ✅ Bloqueio automático de reservas em caso de inadimplência
+- ✅ Indicadores de status do provedor diretamente no painel do usuário
+- ✅ Configuração flexível por ambiente via variáveis `MERCADO_PAGO_*`
+
 ## 🛠 Stack Tecnológica
 
 ### Backend

@@ -1,0 +1,1 @@
+SELECT email, role, "isActive" FROM users WHERE email = 'contato@danilobrandao.com.br';

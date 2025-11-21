@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { CreditCard, Calendar, AlertTriangle, CheckCircle, Clock, History, Plus } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { CreditCard, Calendar, AlertTriangle, CheckCircle, Clock, History } from 'lucide-react';
 import { useState } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
@@ -9,6 +9,8 @@ export default function MyFinancialsPage() {
   const { user } = useAuthStore();
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedVesselId, setSelectedVesselId] = useState<string | null>(null);
+  const [currentPayment, setCurrentPayment] = useState<{ id: string; type: string } | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: userData, isLoading } = useQuery({
     queryKey: ['user-financials', user?.id],
@@ -28,6 +30,99 @@ export default function MyFinancialsPage() {
     },
     enabled: !!selectedVesselId,
   });
+
+  const mercadoPagoEnabled = Boolean(userData?.meta?.mercadoPagoEnabled);
+
+  const payWithMercadoPago = useMutation({
+    mutationFn: async ({ paymentType, paymentId }: { paymentType: string; paymentId: string }) => {
+      const baseUrl = window.location.origin;
+      const { data } = await api.post(
+        `/mercado-pago/payments/${paymentType}/${paymentId}/checkout`,
+        {
+          successUrl: `${baseUrl}/pagamentos/sucesso`,
+          failureUrl: `${baseUrl}/pagamentos/erro`,
+          pendingUrl: `${baseUrl}/pagamentos/pendente`,
+        },
+      );
+      return data?.data;
+    },
+    onSuccess: (response) => {
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['user-financials', user.id] });
+      }
+      if (selectedVesselId) {
+        queryClient.invalidateQueries({ queryKey: ['financial-history', selectedVesselId] });
+      }
+
+      const checkoutUrl = response?.initPoint || response?.sandboxInitPoint;
+      if (checkoutUrl) {
+        window.open(checkoutUrl, '_blank', 'noopener');
+        toast.success('Você será redirecionado ao Mercado Pago para concluir o pagamento.');
+      } else {
+        toast.error('Não foi possível obter o link de pagamento.');
+      }
+    },
+    onError: (error: any) => {
+      const status = error?.response?.status;
+      if (status === 503) {
+        toast.error('Integração com Mercado Pago indisponível. Contate o administrador.');
+      } else {
+        toast.error(
+          error?.response?.data?.message || 'Não foi possível iniciar o pagamento com Mercado Pago.',
+        );
+      }
+    },
+    onSettled: () => {
+      setCurrentPayment(null);
+    },
+  });
+
+  const formatCurrency = (value: number) =>
+    `R$ ${Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+  const formatDate = (date?: string | null) =>
+    date ? new Date(date).toLocaleDateString('pt-BR') : '—';
+
+  const translatePaymentStatus = (status: string) => {
+    switch (status) {
+      case 'PENDING':
+        return 'Pendente';
+      case 'PAID':
+        return 'Pago';
+      case 'OVERDUE':
+        return 'Em atraso';
+      case 'CANCELLED':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  };
+
+  const translateProviderStatus = (status?: string | null) => {
+    if (!status) return null;
+    switch (status) {
+      case 'approved':
+        return 'Aprovado';
+      case 'in_process':
+      case 'pending':
+        return 'Em análise';
+      case 'rejected':
+        return 'Recusado';
+      case 'cancelled':
+        return 'Cancelado';
+      case 'refunded':
+        return 'Reembolsado';
+      case 'charged_back':
+        return 'Chargeback';
+      default:
+        return status;
+    }
+  };
+
+  const handlePayWithMercadoPago = (paymentType: string, paymentId: string) => {
+    setCurrentPayment({ id: paymentId, type: paymentType });
+    payWithMercadoPago.mutate({ paymentType, paymentId });
+  };
 
   if (isLoading) {
     return (
@@ -104,7 +199,7 @@ export default function MyFinancialsPage() {
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-blue-900">Valor Total</h3>
               <p className="text-2xl font-bold text-blue-700">
-                R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {formatCurrency(totalValue)}
               </p>
               <p className="text-sm text-blue-600">Em embarcações</p>
             </div>
@@ -117,7 +212,7 @@ export default function MyFinancialsPage() {
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-green-900">Entrada Paga</h3>
               <p className="text-2xl font-bold text-green-700">
-                R$ {totalDownPayment.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {formatCurrency(totalDownPayment)}
               </p>
               <p className="text-sm text-green-600">Valor de entrada</p>
             </div>
@@ -130,7 +225,7 @@ export default function MyFinancialsPage() {
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-orange-900">Saldo Restante</h3>
               <p className="text-2xl font-bold text-orange-700">
-                R$ {totalRemaining.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {formatCurrency(totalRemaining)}
               </p>
               <p className="text-sm text-orange-600">A pagar</p>
             </div>
@@ -143,7 +238,7 @@ export default function MyFinancialsPage() {
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-purple-900">Marina/Mês</h3>
               <p className="text-2xl font-bold text-purple-700">
-                R$ {totalMarinaMonthly.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {formatCurrency(totalMarinaMonthly)}
               </p>
               <p className="text-sm text-purple-600">Taxa mensal</p>
             </div>
@@ -167,7 +262,18 @@ export default function MyFinancialsPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {vessels.map((userVessel: any) => (
+            {vessels.map((userVessel: any) => {
+              const pendingInstallments = (userVessel.installments || []).filter(
+                (installment: any) => installment.status !== 'PAID',
+              );
+              const pendingMarinaPayments = (userVessel.marinaPayments || []).filter(
+                (payment: any) => payment.status !== 'PAID',
+              );
+              const pendingAdHocCharges = (userVessel.adHocCharges || []).filter(
+                (charge: any) => charge.status !== 'PAID',
+              );
+
+              return (
               <div key={userVessel.id} className="border border-gray-200 rounded-lg p-6 bg-white">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 flex items-center">
@@ -192,21 +298,21 @@ export default function MyFinancialsPage() {
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Valor Total</h4>
                     <p className="text-xl font-bold text-gray-900">
-                      R$ {userVessel.totalValue?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+                      {formatCurrency(userVessel.totalValue || 0)}
                     </p>
                   </div>
 
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Entrada Paga</h4>
                     <p className="text-xl font-bold text-green-600">
-                      R$ {userVessel.downPayment?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+                      {formatCurrency(userVessel.downPayment || 0)}
                     </p>
                   </div>
 
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Saldo Restante</h4>
                     <p className="text-xl font-bold text-orange-600">
-                      R$ {userVessel.remainingAmount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+                      {formatCurrency(userVessel.remainingAmount || 0)}
                     </p>
                   </div>
 
@@ -223,7 +329,7 @@ export default function MyFinancialsPage() {
                     <div className="bg-purple-50 rounded-lg p-4">
                       <h4 className="text-sm font-medium text-purple-700 mb-2">Taxa Mensal da Marina</h4>
                       <p className="text-xl font-bold text-purple-900">
-                        R$ {userVessel.marinaMonthlyFee?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+                        {formatCurrency(userVessel.marinaMonthlyFee || 0)}
                       </p>
                       <p className="text-sm text-purple-600 mt-1">
                         Vence todo dia {userVessel.marinaDueDay || 5} de cada mês
@@ -233,10 +339,9 @@ export default function MyFinancialsPage() {
                     <div className="bg-blue-50 rounded-lg p-4">
                       <h4 className="text-sm font-medium text-blue-700 mb-2">Valor da Parcela</h4>
                       <p className="text-xl font-bold text-blue-900">
-                        {userVessel.totalInstallments > 0 ? 
-                          `R$ ${((userVessel.remainingAmount || 0) / userVessel.totalInstallments).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` :
-                          'R$ 0,00'
-                        }
+                        {userVessel.totalInstallments > 0
+                          ? formatCurrency((userVessel.remainingAmount || 0) / userVessel.totalInstallments)
+                          : formatCurrency(0)}
                       </p>
                       <p className="text-sm text-blue-600 mt-1">
                         {userVessel.totalInstallments || 0} parcelas restantes
@@ -244,7 +349,86 @@ export default function MyFinancialsPage() {
                     </div>
                   </div>
                   
-                  <div className="mt-4">
+                  <div className="mt-6 space-y-4">
+                    {[
+                      { items: pendingInstallments, type: 'installment', title: 'Parcelas Pendentes' },
+                      { items: pendingMarinaPayments, type: 'marina', title: 'Mensalidades da Marina' },
+                      { items: pendingAdHocCharges, type: 'adhoc', title: 'Cobranças Avulsas' },
+                    ].map(({ items, type, title }) =>
+                      items.length > 0 ? (
+                        <div key={title}>
+                          <h4 className="text-sm font-semibold text-gray-800 mb-2">{title}</h4>
+                          <div className="space-y-3">
+                            {items.map((payment: any) => {
+                              const providerStatusLabel = translateProviderStatus(payment.providerStatus);
+                              const isProcessing =
+                                payWithMercadoPago.isPending &&
+                                currentPayment?.id === payment.id &&
+                                currentPayment?.type === type;
+                              const canPayWithGateway =
+                                mercadoPagoEnabled && payment.status !== 'PAID';
+
+                              return (
+                                <div
+                                  key={payment.id}
+                                  className="flex flex-col md:flex-row md:items-center md:justify-between border border-gray-200 rounded-lg p-3 bg-gray-50"
+                                >
+                                  <div className="flex-1">
+                                    <p className="font-medium text-gray-900">
+                                      {type === 'installment'
+                                        ? `Parcela #${payment.installmentNumber || ''}`
+                                        : payment.title || payment.description || 'Cobrança'}
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                      Vencimento: {formatDate(payment.dueDate)}
+                                    </p>
+                                    <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+                                      <span
+                                        className={`px-2 py-1 rounded-full ${
+                                          payment.status === 'OVERDUE'
+                                            ? 'bg-red-100 text-red-700'
+                                            : payment.status === 'PENDING'
+                                            ? 'bg-yellow-100 text-yellow-700'
+                                            : 'bg-green-100 text-green-700'
+                                        }`}
+                                      >
+                                        {translatePaymentStatus(payment.status)}
+                                      </span>
+                                      {providerStatusLabel && (
+                                        <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                                          Mercado Pago: {providerStatusLabel}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="mt-3 md:mt-0 md:text-right">
+                                    <p className="text-lg font-semibold text-gray-900">
+                                      {formatCurrency(payment.amount)}
+                                    </p>
+                                    {canPayWithGateway ? (
+                                      <button
+                                        onClick={() => handlePayWithMercadoPago(type, payment.id)}
+                                        className="btn btn-primary text-xs mt-2"
+                                        disabled={isProcessing}
+                                      >
+                                        {isProcessing ? 'Gerando checkout...' : 'Pagar com Mercado Pago'}
+                                      </button>
+                                    ) : !mercadoPagoEnabled ? (
+                                      <p className="text-xs text-gray-500 mt-2">
+                                        Pagamento on-line indisponível. Contate o administrador.
+                                      </p>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null,
+                    )}
+                  </div>
+
+                  <div className="mt-6">
                     <button
                       onClick={() => {
                         setSelectedVesselId(userVessel.id);
@@ -258,7 +442,8 @@ export default function MyFinancialsPage() {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

@@ -24,6 +24,8 @@ export default function BookingsPage() {
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState<any>(null);
 
   // Buscar embarcações
   const { data: vessels } = useQuery({
@@ -82,12 +84,48 @@ export default function BookingsPage() {
     mutationFn: async (id: string) => {
       return api.post(`/bookings/${id}/cancel`, { reason: 'Cancelado pelo usuário' });
     },
+    // Atualização otimista - remove da UI imediatamente
+    onMutate: async (bookingId) => {
+      await queryClient.cancelQueries({ queryKey: ['bookings'] });
+      await queryClient.cancelQueries({ queryKey: ['calendar'] });
+
+      const previousBookings = queryClient.getQueryData(['bookings']);
+
+      // Atualizar status para CANCELLED imediatamente
+      queryClient.setQueryData(['bookings'], (old: any) => {
+        return old ? old.map((b: any) => 
+          b.id === bookingId ? { ...b, status: 'CANCELLED' } : b
+        ) : [];
+      });
+
+      // Atualizar calendário também
+      if (selectedVessel) {
+        queryClient.setQueryData(['calendar', selectedVessel.id, currentMonth], (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            bookings: old.bookings.map((b: any) =>
+              b.id === bookingId ? { ...b, status: 'CANCELLED' } : b
+            ),
+          };
+        });
+      }
+
+      return { previousBookings };
+    },
     onSuccess: () => {
+      // Invalidar para garantir sincronização
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['calendar'] });
       toast.success('Reserva cancelada!');
+      setShowCancelModal(false);
+      setBookingToCancel(null);
     },
-    onError: (error: any) => {
+    onError: (error: any, bookingId, context) => {
+      // Reverter em caso de erro
+      if (context?.previousBookings) {
+        queryClient.setQueryData(['bookings'], context.previousBookings);
+      }
       toast.error(error.response?.data?.error || 'Erro ao cancelar reserva');
     },
   });
@@ -150,9 +188,14 @@ export default function BookingsPage() {
     }
   };
 
-  const handleCancelBooking = (id: string) => {
-    if (confirm('Tem certeza que deseja cancelar esta reserva?')) {
-      cancelBooking.mutate(id);
+  const handleCancelBooking = (booking: any) => {
+    setBookingToCancel(booking);
+    setShowCancelModal(true);
+  };
+
+  const confirmCancelBooking = () => {
+    if (bookingToCancel) {
+      cancelBooking.mutate(bookingToCancel.id);
     }
   };
 
@@ -570,8 +613,11 @@ export default function BookingsPage() {
                     <td className="table-cell">
                       {booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED' && (
                         <button
-                          onClick={() => handleCancelBooking(booking.id)}
-                          className="btn btn-danger text-xs px-3 py-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCancelBooking(booking);
+                          }}
+                          className="btn btn-danger text-xs px-3 py-1 min-w-[80px] touch-manipulation"
                         >
                           Cancelar
                         </button>
@@ -763,6 +809,90 @@ export default function BookingsPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Cancelamento */}
+      {showCancelModal && bookingToCancel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full shadow-xl">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">Cancelar Reserva</h2>
+                <button
+                  onClick={() => {
+                    setShowCancelModal(false);
+                    setBookingToCancel(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 touch-manipulation"
+                  type="button"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-start">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold text-yellow-900 mb-2">
+                        Tem certeza que deseja cancelar esta reserva?
+                      </p>
+                      <p className="text-sm text-yellow-800">
+                        Esta ação não pode ser desfeita.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Embarcação:</span>
+                    <span className="font-medium text-gray-900">{bookingToCancel.vessel?.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Data:</span>
+                    <span className="font-medium text-gray-900">
+                      {format(new Date(bookingToCancel.bookingDate), 'dd/MM/yyyy', { locale: ptBR })}
+                    </span>
+                  </div>
+                  {bookingToCancel.user && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Usuário:</span>
+                      <span className="font-medium text-gray-900">{bookingToCancel.user.name}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCancelModal(false);
+                    setBookingToCancel(null);
+                  }}
+                  className="flex-1 btn btn-outline order-2 sm:order-1 touch-manipulation"
+                  disabled={cancelBooking.isPending}
+                >
+                  Não, Manter Reserva
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmCancelBooking}
+                  className="flex-1 btn btn-danger order-1 sm:order-2 touch-manipulation"
+                  disabled={cancelBooking.isPending}
+                >
+                  {cancelBooking.isPending ? (
+                    <span className="loading loading-spinner loading-sm"></span>
+                  ) : (
+                    'Sim, Cancelar Reserva'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

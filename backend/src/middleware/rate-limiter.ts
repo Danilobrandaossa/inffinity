@@ -7,6 +7,10 @@ export const rateLimiter = rateLimit({
   message: 'Muitas requisições deste IP, tente novamente mais tarde.',
   standardHeaders: true,
   legacyHeaders: false,
+  // Skip rate limiting para rotas de login (nginx já faz isso)
+  skip: (req) => {
+    return req.path === '/api/auth/login' || req.path === '/auth/login';
+  },
 });
 
 export const loginRateLimiter = rateLimit({

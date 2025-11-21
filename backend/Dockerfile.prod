@@ -25,7 +25,7 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Install curl and openssl for healthcheck and Prisma
-RUN apk add --no-cache curl openssl openssl1.1-compat
+RUN apk add --no-cache curl openssl libcrypto3 libssl3
 
 # Copy package files
 COPY package*.json ./

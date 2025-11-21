@@ -31,14 +31,10 @@ export class OneSignalService {
       if (data.userIds && data.userIds.length > 0) {
         const users = await prisma.user.findMany({
           where: { id: { in: data.userIds }, isActive: true },
-          select: { 
-            id: true,
-            onesignalPlayerId: true,
-          },
         });
         
         playerIds = users
-          .map((u) => u.onesignalPlayerId)
+          .map((u: any) => u.onesignalPlayerId)
           .filter((id): id is string => !!id);
       } else if (data.playerIds) {
         playerIds = data.playerIds;

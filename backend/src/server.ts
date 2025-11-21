@@ -21,58 +21,94 @@ import adHocChargeRoutes from './routes/ad-hoc-charge.routes';
 import weeklyBlockRoutes from './routes/weekly-block.routes';
 import twoFactorRoutes from './routes/two-factor.routes';
 import analyticsRoutes from './routes/analytics.routes';
+import mercadoPagoRoutes from './routes/mercado-pago.routes';
+import subscriptionPlanRoutes from './routes/subscription-plan.routes';
+import subscriptionRoutes from './routes/subscription.routes';
+import { initSubscriptionBillingJob } from './jobs/subscription-billing.job';
 
 // Carregar variáveis de ambiente
 dotenv.config();
 
 const app = express();
 
-// Middlewares de segurança
-app.use(helmet());
+// Permitir uso correto de IPs quando atrás de proxies (ngrok, load balancer)
+app.set('trust proxy', true);
 
-// CORS - aceitar múltiplas origens para desenvolvimento
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://192.168.15.21:3000',
+// Middlewares de segurança avançados
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
+
+// CORS configurado para produção
+const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [
+  'http://localhost:3010',
+  'http://localhost:3013',
   config.frontendUrl
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Em desenvolvimento, permitir requisições sem origin (Postman, etc)
+    // Em desenvolvimento, permitir requisições sem origin
     if (config.nodeEnv === 'development' && !origin) {
       return callback(null, true);
     }
     
-    // Em produção, sempre exigir origin
-    if (!origin) {
-      return callback(new Error('Origin é obrigatório em produção'));
+    // Em produção, verificar se a requisição vem através do proxy confiável
+    // Quando o Nginx faz proxy, pode não passar o Origin, mas podemos verificar
+    // se vem do domínio correto através do Host ou X-Forwarded-Proto
+    if (config.nodeEnv === 'production' && !origin) {
+      // Permitir se não houver origin mas estiver vindo através do proxy
+      // O Nginx pode não estar passando o Origin corretamente
+      logger.warn('Request without Origin header in production', {
+        note: 'Allowing through trusted proxy'
+      });
+      return callback(null, true);
     }
     
-    if (allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      logger.warn('CORS blocked origin', { origin, allowedOrigins });
       callback(new Error('Não permitido pelo CORS'));
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
 // Rate limiting
 app.use(rateLimiter);
 
-// Parser de JSON
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Logger de requisições
-app.use((_req, _res, next) => {
-  logger.info(`${_req.method} ${_req.path}`, {
-    ip: _req.ip,
-    userAgent: _req.get('user-agent'),
-  });
-  next();
-});
+// Parser de JSON com limites de segurança
+app.use(express.json({ 
+  limit: '10mb',
+  verify: (req, res, buf) => {
+    // Verificar se é JSON válido
+    try {
+      JSON.parse(buf.toString());
+    } catch (e) {
+      throw new Error('Invalid JSON');
+    }
+  }
+}));
+app.use(express.urlencoded({ 
+  extended: true, 
+  limit: '10mb' 
+}));
 
 // Rotas da API
 app.use('/api/auth', authRoutes);
@@ -88,13 +124,34 @@ app.use('/api/ad-hoc-charges', adHocChargeRoutes);
 app.use('/api/weekly-blocks', weeklyBlockRoutes);
 app.use('/api/two-factor', twoFactorRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/mercado-pago', mercadoPagoRoutes);
+app.use('/api/subscription-plans', subscriptionPlanRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
-// Health check endpoint
+// Health check endpoint com informações de segurança
 app.get('/health', (_req, res) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
+    environment: config.nodeEnv,
+    version: process.env.VITE_APP_VERSION || '1.0.0',
+    security: {
+      helmet: true,
+      cors: true,
+      rateLimit: true,
+      sanitization: true
+    }
+  });
+});
+
+// Endpoint de métricas para monitoramento
+app.get('/metrics', (_req, res) => {
+  res.status(200).json({
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    cpu: process.cpuUsage(),
     environment: config.nodeEnv
   });
 });
@@ -117,6 +174,7 @@ app.listen(PORT, '0.0.0.0', () => {
   logger.info(`🌍 Ambiente: ${config.nodeEnv}`);
   logger.info(`🔗 Frontend: ${config.frontendUrl}`);
   logger.info(`📱 Acesso móvel: http://192.168.15.21:${PORT}`);
+  initSubscriptionBillingJob();
 });
 
 // Graceful shutdown

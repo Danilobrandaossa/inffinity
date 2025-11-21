@@ -235,8 +235,9 @@ export default function BookingsPage() {
     if (!selectedDate || !selectedVessel) return;
 
     const formData = new FormData(e.currentTarget);
-    // Enviar apenas a data no formato YYYY-MM-DD para evitar problemas de timezone
-    const dateOnly = format(selectedDate, 'yyyy-MM-dd');
+    // Garantir normalização da data e enviar apenas data (YYYY-MM-DD)
+    const normalizedDate = startOfDay(selectedDate);
+    const dateOnly = format(normalizedDate, 'yyyy-MM-dd');
     createBooking.mutate({
       vesselId: selectedVessel.id,
       bookingDate: dateOnly,

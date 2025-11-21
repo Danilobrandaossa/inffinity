@@ -55,12 +55,13 @@ export default function BookingsPage() {
     staleTime: 0, // Sempre considerar stale para atualizações imediatas
   });
 
-  // Buscar todas as reservas
+  // Buscar todas as reservas (excluindo canceladas por padrão para evitar confusão)
   const { data: allBookings } = useQuery({
     queryKey: ['bookings'],
     queryFn: async () => {
-      const { data } = await api.get('/bookings');
-      return data;
+      const { data } = await api.get('/bookings'); // Backend já exclui canceladas por padrão
+      // Filtrar canceladas no frontend também como backup
+      return data ? data.filter((b: any) => b.status !== 'CANCELLED') : [];
     },
     staleTime: 10 * 1000, // 10 segundos - equilibra atualização e estabilidade
   });
@@ -192,28 +193,24 @@ export default function BookingsPage() {
       return { previousBookings };
     },
     onSuccess: (response) => {
-      // Atualizar a reserva cancelada com os dados da API (garante sincronização)
-      if (response?.data) {
-        queryClient.setQueryData(['bookings'], (old: any) => {
-          if (!old) return [response.data];
-          // Atualizar a reserva existente ao invés de criar nova
-          return old.map((b: any) => 
-            b.id === response.data.id ? response.data : b
-          );
-        });
+      // Remover reserva cancelada da lista (canceladas não aparecem na lista principal)
+      queryClient.setQueryData(['bookings'], (old: any) => {
+        if (!old) return [];
+        // Remover a reserva cancelada da lista ao invés de atualizar
+        return old.filter((b: any) => b.id !== response?.data?.id);
+      });
 
-        // Atualizar calendário também
-        if (selectedVessel) {
-          queryClient.setQueryData(['calendar', selectedVessel.id, currentMonth], (old: any) => {
-            if (!old) return old;
-            return {
-              ...old,
-              bookings: old.bookings.map((b: any) =>
-                b.id === response.data.id ? response.data : b
-              ),
-            };
-          });
-        }
+      // Atualizar calendário (mantém canceladas mas marca como canceladas)
+      if (selectedVessel && response?.data) {
+        queryClient.setQueryData(['calendar', selectedVessel.id, currentMonth], (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            bookings: old.bookings.map((b: any) =>
+              b.id === response.data.id ? { ...b, status: 'CANCELLED' } : b
+            ),
+          };
+        });
       }
 
       // Invalidar para garantir sincronização completa

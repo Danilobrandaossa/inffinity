@@ -242,6 +242,7 @@ export class BookingService {
     status?: BookingStatus;
     startDate?: Date;
     endDate?: Date;
+    excludeCancelled?: boolean;
   }) {
     return prisma.booking.findMany({
       where: {
@@ -253,6 +254,11 @@ export class BookingService {
         }),
         ...(filters?.endDate && {
           bookingDate: { lte: filters.endDate },
+        }),
+        // Excluir reservas canceladas por padrão para evitar confusão
+        // Só aplicar se não foi especificado um status específico
+        ...(filters?.excludeCancelled && !filters?.status && {
+          status: { not: BookingStatus.CANCELLED },
         }),
       },
       include: {

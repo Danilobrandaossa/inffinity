@@ -44,7 +44,7 @@ export class BookingController {
 
   async findAll(req: Request, res: Response, next: NextFunction) {
     try {
-      const { vesselId, status, startDate, endDate } = req.query;
+      const { vesselId, status, startDate, endDate, includeCancelled } = req.query;
       const userId = req.user!.userId;
       const userRole = req.user!.role;
 
@@ -59,6 +59,12 @@ export class BookingController {
       if (status) filters.status = status as BookingStatus;
       if (startDate) filters.startDate = new Date(startDate as string);
       if (endDate) filters.endDate = new Date(endDate as string);
+      
+      // Por padrão, excluir reservas canceladas para evitar confusão
+      // Apenas incluir canceladas se explicitamente solicitado
+      if (includeCancelled !== 'true') {
+        filters.excludeCancelled = true;
+      }
 
       const bookings = await bookingService.findAll(filters);
 

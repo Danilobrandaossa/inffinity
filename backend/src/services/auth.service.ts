@@ -8,16 +8,33 @@ import { JWTPayload } from '../middleware/auth';
 
 export class AuthService {
   async login(email: string, password: string, ip?: string) {
+    // Normalizar email (lowercase)
+    const normalizedEmail = email.toLowerCase().trim();
+    
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
     });
 
-    if (!user || !user.isActive) {
+    if (!user) {
+      // Log para debug (não expor no erro final)
+      console.log(`[AUTH] Login failed: User not found for email: ${normalizedEmail}`);
+      throw new AppError(401, 'Credenciais inválidas');
+    }
+
+    if (!user.isActive) {
+      console.log(`[AUTH] Login failed: User ${user.id} is inactive`);
+      throw new AppError(401, 'Credenciais inválidas');
+    }
+
+    // Verificar se a senha está definida
+    if (!user.password) {
+      console.log(`[AUTH] Login failed: User ${user.id} has no password set`);
       throw new AppError(401, 'Credenciais inválidas');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      console.log(`[AUTH] Login failed: Invalid password for user ${user.id}`);
       throw new AppError(401, 'Credenciais inválidas');
     }
 

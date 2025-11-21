@@ -17,12 +17,24 @@ export class AuthController {
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password } = loginSchema.parse(req.body);
-      const ip = req.ip || req.socket.remoteAddress;
+      // Capturar IP corretamente (pode vir do proxy)
+      const ip = req.headers['x-forwarded-for'] 
+        ? (req.headers['x-forwarded-for'] as string).split(',')[0].trim()
+        : req.headers['x-real-ip'] as string
+        || req.ip 
+        || req.socket.remoteAddress 
+        || 'unknown';
 
       const result = await authService.login(email, password, ip);
 
       res.json(result);
     } catch (error) {
+      // Log do erro para debug (sem expor dados sensíveis)
+      if (error instanceof z.ZodError) {
+        console.error('[AUTH] Validation error:', error.errors);
+      } else {
+        console.error('[AUTH] Login error:', error instanceof Error ? error.message : 'Unknown error');
+      }
       next(error);
     }
   }

@@ -136,6 +136,43 @@ export default function NotificationManagementPage() {
         </button>
       </div>
 
+      {/* Configurações OneSignal */}
+      <div className="card">
+        <div className="flex items-center mb-4">
+          <Bell className="w-6 h-6 text-primary-600 mr-3" />
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Notificações Push</h2>
+            <p className="text-sm text-gray-600">Integração com OneSignal</p>
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="label">OneSignal App ID</label>
+            <input
+              type="text"
+              value="51feb7b0-8b6f-4f45-8b7b-4a2dd48a41a5"
+              readOnly
+              className="input bg-gray-50"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              ID da aplicação no painel do OneSignal
+            </p>
+          </div>
+          <div>
+            <label className="label">OneSignal REST API Key</label>
+            <input
+              type="text"
+              value="os_v2_app_kh7lpmeln5hulc33jiw5jcsbuxd7axev4egenceyu6glg642ypx6t37fwmx6kfezssjphwbfletvw7uohwclwkp3chf2nxwexywfpai"
+              readOnly
+              className="input bg-gray-50"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Chave de API REST para envio de notificações
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="card bg-blue-50 border-blue-200">

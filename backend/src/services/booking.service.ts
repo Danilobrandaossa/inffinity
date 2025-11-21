@@ -1,9 +1,11 @@
 import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/error-handler';
 import { BookingStatus } from '@prisma/client';
-import { startOfDay, isBefore, isAfter, differenceInHours, addDays } from 'date-fns';
+import { startOfDay, isBefore, isAfter, differenceInHours, addDays, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { WeeklyBlockService } from './weekly-block.service';
 import { logger } from '../utils/logger';
+import { oneSignalService } from './onesignal.service';
 
 const weeklyBlockService = new WeeklyBlockService();
 
@@ -225,12 +227,22 @@ export class BookingService {
       },
     });
 
-    // 9. Enviar notificação WhatsApp via webhook
+    // 9. Enviar notificação push via OneSignal
     try {
-      // Webhook removido
+      await oneSignalService.sendNotification({
+        title: '✅ Reserva Confirmada',
+        message: `Sua reserva para ${vessel?.name} no dia ${format(bookingDateTime, 'dd/MM/yyyy', { locale: ptBR })} foi confirmada!`,
+        userIds: [userId],
+        url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/bookings`,
+        data: {
+          bookingId: booking.id,
+          vesselId: data.vesselId,
+          bookingDate: bookingDateTime.toISOString(),
+        },
+      });
     } catch (error) {
-      logger.error('Erro ao enviar webhook:', error);
-      // Não bloquear a criação da reserva se o webhook falhar
+      logger.error('Erro ao enviar push notification:', error);
+      // Não bloquear a criação da reserva se a notificação falhar
     }
 
     return booking;
@@ -426,11 +438,22 @@ export class BookingService {
       },
     });
 
-    // Enviar notificação WhatsApp via webhook
+    // Enviar notificação push via OneSignal
     try {
-      // Webhook removido
+      await oneSignalService.sendNotification({
+        title: '❌ Reserva Cancelada',
+        message: `Sua reserva para ${booking.vessel.name} no dia ${format(new Date(booking.bookingDate), 'dd/MM/yyyy', { locale: ptBR })} foi cancelada.${reason ? ` Motivo: ${reason}` : ''}`,
+        userIds: [booking.userId],
+        url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/bookings`,
+        data: {
+          bookingId: id,
+          vesselId: booking.vesselId,
+          status: 'CANCELLED',
+        },
+      });
     } catch (error) {
-      logger.error('Erro ao enviar webhook:', error);
+      logger.error('Erro ao enviar push notification:', error);
+      // Não bloquear o cancelamento se a notificação falhar
     }
 
     return updatedBooking;

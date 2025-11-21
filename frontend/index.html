@@ -17,6 +17,17 @@
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
     
     <title>Embarcações - Sistema de Agendamento</title>
+    
+    <!-- OneSignal SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "51feb7b0-8b6f-4f45-8b7b-4a2dd48a41a5",
+        });
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

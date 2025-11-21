@@ -336,6 +336,13 @@ export class UserService {
     });
   }
 
+  async updateOneSignalPlayerId(userId: string, playerId: string) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { onesignalPlayerId: playerId },
+    });
+  }
+
   async changePassword(
     userId: string,
     currentPassword: string,

@@ -8,8 +8,9 @@ const userController = new UserController();
 // Todas as rotas requerem autenticação
 router.use(authenticate);
 
-// Rota para alterar própria senha
+// Rotas para o próprio usuário
 router.post('/change-password', userController.changePassword.bind(userController));
+router.post('/onesignal-player-id', userController.updateOneSignalPlayerId.bind(userController));
 
 // Rotas apenas para Admin
 router.post('/', isAdmin, userController.create.bind(userController));

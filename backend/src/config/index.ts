@@ -47,6 +47,12 @@ export const config = {
       timezone: process.env.SUBSCRIPTION_BILLING_TZ || 'America/Sao_Paulo',
     },
   },
+
+  // OneSignal
+  onesignal: {
+    appId: process.env.ONESIGNAL_APP_ID || '51feb7b0-8b6f-4f45-8b7b-4a2dd48a41a5',
+    restApiKey: process.env.ONESIGNAL_REST_API_KEY || 'os_v2_app_kh7lpmeln5hulc33jiw5jcsbuxd7axev4egenceyu6glg642ypx6t37fwmx6kfezssjphwbfletvw7uohwclwkp3chf2nxwexywfpai',
+  },
 } as const;
 
 export default config;

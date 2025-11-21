@@ -149,16 +149,26 @@ export default function BookingsPage() {
           );
         });
 
-        // Atualizar calendário também
+        // Atualizar cache do calendário também
         if (selectedVessel) {
           queryClient.setQueryData(['calendar', selectedVessel.id, currentMonth], (old: any) => {
-            if (!old) return old;
-            return {
-              ...old,
-              bookings: old.bookings.map((b: any) =>
-                b.id?.toString().startsWith('temp-') ? response.data : b
-              ),
-            };
+            if (!old || !old.bookings) {
+              // Se não existe cache, criar estrutura básica
+              return old || { bookings: [response.data], blockedDates: [], weeklyBlocks: [] };
+            }
+            // Verificar se já existe (de update) ou adicionar (de create)
+            const existingIndex = old.bookings.findIndex((b: any) => 
+              b.id?.toString().startsWith('temp-') || b.id === response.data.id
+            );
+            if (existingIndex >= 0) {
+              // Atualizar existente
+              const newBookings = [...old.bookings];
+              newBookings[existingIndex] = response.data;
+              return { ...old, bookings: newBookings };
+            } else {
+              // Adicionar novo
+              return { ...old, bookings: [...old.bookings, response.data] };
+            }
           });
         }
       }

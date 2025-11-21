@@ -31,7 +31,10 @@ export class OneSignalService {
       if (data.userIds && data.userIds.length > 0) {
         const users = await prisma.user.findMany({
           where: { id: { in: data.userIds }, isActive: true },
-          select: { onesignalPlayerId: true },
+          select: { 
+            id: true,
+            onesignalPlayerId: true,
+          },
         });
         
         playerIds = users

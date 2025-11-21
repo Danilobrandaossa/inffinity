@@ -648,13 +648,13 @@ export default function BookingsPage() {
                     }
                   } else if (isBooked) {
                     // Verificar se a reserva é do próprio usuário ou de outro
-                    const isMyBooking = !isAdmin && booking?.user?.id === user?.id;
+                    const isMyBooking = booking?.user?.id === user?.id;
                     
                     if (isMyBooking) {
-                      // Reserva do próprio usuário - verde
+                      // Reserva do próprio usuário - verde (clicável para ver detalhes/cancelar)
                       bgColor = 'bg-green-500';
                       textColor = 'text-white';
-                      title = 'Reservado por você';
+                      title = 'Reservado por você - Clique para ver detalhes';
                     } else {
                       // Reserva de outro usuário - cinza escuro/desabilitado para não-admin
                       bgColor = isAdmin ? 'bg-green-500' : 'bg-gray-400';
@@ -683,8 +683,15 @@ export default function BookingsPage() {
                           return;
                         }
                         
+                        // Permitir ver detalhes/cancelar reservas próprias
+                        if (!isAdmin && isBooked && booking?.user?.id === user?.id) {
+                          // Abrir modal para ver detalhes ou cancelar reserva própria
+                          setShowModal(true);
+                          return;
+                        }
+                        
                         // Não permitir reservar se não pode (datas passadas, bloqueadas, etc)
-                        if (!canBook && !isAdmin) {
+                        if (!canBook && !isAdmin && !isBooked) {
                           return;
                         }
                         
@@ -719,12 +726,12 @@ export default function BookingsPage() {
                         aspect-square p-1 sm:p-2 text-xs sm:text-sm rounded-lg border transition-colors relative
                         ${!isCurrentMonth ? 'opacity-30' : ''}
                         ${textColor}
-                        ${(isCurrentMonth && !(!isAdmin && isBooked && booking?.user?.id !== user?.id)) ? 'cursor-pointer' : 'cursor-not-allowed'}
+                        ${isCurrentMonth && (canBook || isAdmin || (isBooked && booking?.user?.id === user?.id)) ? 'cursor-pointer' : 'cursor-not-allowed'}
                       `}
                       style={{ 
                         backgroundColor: bgColor.startsWith('#') || bgColor.startsWith('rgb') ? bgColor : undefined 
                       }}
-                      disabled={!isCurrentMonth || (!isAdmin && isBooked && booking?.user?.id !== user?.id)}
+                      disabled={!isCurrentMonth || (isBookedByOther && !isAdmin) || (!canBook && !isAdmin && !isBooked)}
                       title={title}
                     >
                       <div className="flex items-center justify-center h-full">

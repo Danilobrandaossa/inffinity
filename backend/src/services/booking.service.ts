@@ -194,15 +194,7 @@ export class BookingService {
         createdByIp: ip,
       },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            onesignalPlayerId: true as any, // Incluir para notificação push - type assertion temporária
-          },
-        },
+        user: true, // Incluir todos os campos do usuário (incluindo onesignalPlayerId)
         vessel: {
           select: {
             id: true,
@@ -411,15 +403,7 @@ export class BookingService {
         cancellationReason: reason,
       },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            onesignalPlayerId: true as any, // Incluir para notificação push - type assertion temporária
-          },
-        },
+        user: true, // Incluir todos os campos do usuário (incluindo onesignalPlayerId)
         vessel: {
           select: {
             id: true,

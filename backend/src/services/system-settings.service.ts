@@ -66,35 +66,5 @@ export class SystemSettingsService {
       await this.set(setting.key, setting.value, setting.category || 'general');
     }
   }
-
-  /**
-   * Obter configurações do OneSignal
-   */
-  async getOneSignalConfig(): Promise<{ appId: string; restApiKey: string }> {
-    try {
-      const appId = await this.get('ONESIGNAL_APP_ID');
-      const restApiKey = await this.get('ONESIGNAL_REST_API_KEY');
-
-      return {
-        appId: appId || process.env.ONESIGNAL_APP_ID || '',
-        restApiKey: restApiKey || process.env.ONESIGNAL_REST_API_KEY || '',
-      };
-    } catch (error: any) {
-      // Se houver erro, retornar valores das variáveis de ambiente
-      logger.error('Erro ao buscar configurações do OneSignal', { error: error.message });
-      return {
-        appId: process.env.ONESIGNAL_APP_ID || '',
-        restApiKey: process.env.ONESIGNAL_REST_API_KEY || '',
-      };
-    }
-  }
-
-  /**
-   * Atualizar configurações do OneSignal
-   */
-  async setOneSignalConfig(appId: string, restApiKey: string): Promise<void> {
-    await this.set('ONESIGNAL_APP_ID', appId, 'onesignal');
-    await this.set('ONESIGNAL_REST_API_KEY', restApiKey, 'onesignal');
-  }
 }
 

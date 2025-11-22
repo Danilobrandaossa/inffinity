@@ -5,7 +5,6 @@ import { startOfDay, isBefore, isAfter, differenceInHours, addDays, format } fro
 import { ptBR } from 'date-fns/locale';
 import { WeeklyBlockService } from './weekly-block.service';
 import { logger } from '../utils/logger';
-import { oneSignalService } from './onesignal.service';
 
 const weeklyBlockService = new WeeklyBlockService();
 
@@ -194,7 +193,7 @@ export class BookingService {
         createdByIp: ip,
       },
       include: {
-        user: true, // Incluir todos os campos do usuário (incluindo onesignalPlayerId)
+        user: true,
         vessel: {
           select: {
             id: true,
@@ -219,28 +218,6 @@ export class BookingService {
         },
       },
     });
-
-    // 9. Enviar notificação push via OneSignal
-    try {
-      // Usar playerId diretamente se disponível, senão usar userId
-      const userPlayerId = (booking.user as any)?.onesignalPlayerId;
-      const playerIds = userPlayerId ? [userPlayerId] : undefined;
-      
-      await oneSignalService.sendNotification({
-        title: '✅ Reserva Confirmada',
-        message: `Sua reserva para ${booking.vessel.name} no dia ${format(bookingDateTime, 'dd/MM/yyyy', { locale: ptBR })} foi confirmada!`,
-        ...(playerIds ? { playerIds } : { userIds: [userId] }),
-        url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/bookings`,
-        data: {
-          bookingId: booking.id,
-          vesselId: data.vesselId,
-          bookingDate: bookingDateTime.toISOString(),
-        },
-      });
-    } catch (error) {
-      logger.error('Erro ao enviar push notification:', error);
-      // Não bloquear a criação da reserva se a notificação falhar
-    }
 
     return booking;
   }
@@ -403,7 +380,7 @@ export class BookingService {
         cancellationReason: reason,
       },
       include: {
-        user: true, // Incluir todos os campos do usuário (incluindo onesignalPlayerId)
+        user: true,
         vessel: {
           select: {
             id: true,
@@ -427,16 +404,6 @@ export class BookingService {
         },
       },
     });
-
-    // Enviar notificação push via OneSignal
-    try {
-      await oneSignalService.sendNotification({
-        title: '❌ Reserva Cancelada',
-        message: `Sua reserva para ${booking.vessel.name} no dia ${format(new Date(booking.bookingDate), 'dd/MM/yyyy', { locale: ptBR })} foi cancelada.${reason ? ` Motivo: ${reason}` : ''}`,
-        userIds: [booking.userId],
-        url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/bookings`,
-        data: {
-          bookingId: id,
           vesselId: booking.vesselId,
           status: 'CANCELLED',
         },

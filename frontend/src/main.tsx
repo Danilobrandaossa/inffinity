@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './index.css';
-import { oneSignalService } from './lib/onesignal';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,14 +31,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </React.StrictMode>
 );
-
-// Inicializar OneSignal quando o app carregar (se usuário já estiver logado)
-// Também será inicializado após login via authStore
-if (localStorage.getItem('token')) {
-  setTimeout(() => {
-    oneSignalService.initialize().catch(console.error);
-  }, 2000); // Aguardar 2 segundos para garantir que o OneSignal SDK carregou
-}
 
 
 

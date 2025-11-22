@@ -1,7 +1,6 @@
 import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/error-handler';
 import { UserRole } from '@prisma/client';
-import { oneSignalService } from './onesignal.service';
 
 export class NotificationService {
   async create(data: {
@@ -57,47 +56,15 @@ export class NotificationService {
       });
     }
 
-    // Criar UserNotification para os usuários determinados
-    if (targetUsers.length > 0) {
-      await prisma.userNotification.createMany({
-        data: targetUsers.map((user) => ({
-          userId: user.id,
-          notificationId: notification.id,
-        })),
-      });
-
-      // Enviar notificação push via OneSignal
-      try {
-        if (data.isGlobal) {
-          // Notificação global
-          await oneSignalService.sendGlobalNotification({
-            title: data.title,
-            message: data.message,
-            url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/notifications`,
-            data: {
-              notificationId: notification.id,
-              type: data.type,
-            },
-          });
-        } else {
-          // Notificação para usuários específicos
-          const userIds = targetUsers.map((u) => u.id);
-          await oneSignalService.sendNotification({
-            title: data.title,
-            message: data.message,
-            userIds,
-            url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/notifications`,
-            data: {
-              notificationId: notification.id,
-              type: data.type,
-            },
-          });
-        }
-      } catch (error) {
-        // Log do erro mas não falhar a criação da notificação
-        console.error('Erro ao enviar push notification:', error);
+      // Criar UserNotification para os usuários determinados
+      if (targetUsers.length > 0) {
+        await prisma.userNotification.createMany({
+          data: targetUsers.map((user) => ({
+            userId: user.id,
+            notificationId: notification.id,
+          })),
+        });
       }
-    }
 
     return notification;
   }

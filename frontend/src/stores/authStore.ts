@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '../lib/api';
-import { oneSignalService } from '../lib/onesignal';
 
 export interface User {
   id: string;
@@ -41,11 +40,6 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: data.refreshToken,
           isAuthenticated: true,
         });
-
-        // Inicializar OneSignal após login bem-sucedido
-        setTimeout(() => {
-          oneSignalService.initialize().catch(console.error);
-        }, 1000);
       },
 
       logout: () => {

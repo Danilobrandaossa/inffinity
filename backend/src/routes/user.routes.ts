@@ -10,7 +10,6 @@ router.use(authenticate);
 
 // Rotas para o próprio usuário
 router.post('/change-password', userController.changePassword.bind(userController));
-router.post('/onesignal-player-id', userController.updateOneSignalPlayerId.bind(userController));
 
 // Rotas apenas para Admin
 router.post('/', isAdmin, userController.create.bind(userController));

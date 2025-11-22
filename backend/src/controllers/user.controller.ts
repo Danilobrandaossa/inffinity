@@ -140,22 +140,5 @@ export class UserController {
       next(error);
     }
   }
-
-  async updateOneSignalPlayerId(req: Request, res: Response, next: NextFunction) {
-    try {
-      const userId = req.user!.userId;
-      const { playerId } = req.body;
-
-      if (!playerId || typeof playerId !== 'string') {
-        return res.status(400).json({ error: 'playerId é obrigatório' });
-      }
-
-      await userService.updateOneSignalPlayerId(userId, playerId);
-
-      res.json({ message: 'Player ID atualizado com sucesso' });
-    } catch (error) {
-      next(error);
-    }
-  }
 }
 

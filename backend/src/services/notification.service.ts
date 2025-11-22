@@ -1,6 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { AppError } from '../middleware/error-handler';
 import { UserRole } from '@prisma/client';
+import { logger } from '../utils/logger';
 
 export class NotificationService {
   async create(data: {
@@ -33,11 +34,24 @@ export class NotificationService {
     if (data.userId) {
       // Usuário específico
       const user = await prisma.user.findUnique({ where: { id: data.userId } });
-      if (user) targetUsers = [user];
+      if (user) {
+        targetUsers = [user];
+        logger.info('[NotificationService] Notificação para usuário específico', { 
+          userId: data.userId,
+          notificationId: notification.id 
+        });
+      } else {
+        logger.warn('[NotificationService] Usuário não encontrado', { userId: data.userId });
+      }
     } else if (data.userIds && data.userIds.length > 0) {
       // Múltiplos usuários específicos
       targetUsers = await prisma.user.findMany({
         where: { id: { in: data.userIds }, isActive: true }
+      });
+      logger.info('[NotificationService] Notificação para múltiplos usuários', { 
+        userIdsCount: data.userIds.length,
+        foundCount: targetUsers.length,
+        notificationId: notification.id 
       });
     } else if (data.vesselId) {
       // Todos os usuários de uma embarcação específica
@@ -45,26 +59,75 @@ export class NotificationService {
         where: { vesselId: data.vesselId },
         include: { user: true }
       });
-      targetUsers = userVessels.map(uv => uv.user);
+      targetUsers = userVessels.map(uv => uv.user).filter(user => user !== null);
+      logger.info('[NotificationService] Notificação para embarcação', { 
+        vesselId: data.vesselId,
+        usersCount: targetUsers.length,
+        notificationId: notification.id 
+      });
     } else if (data.isGlobal || data.targetRole) {
-      // Global ou por role
+      // Global ou por role - IMPORTANTE: não filtrar por isActive para garantir que todos recebam
       targetUsers = await prisma.user.findMany({
         where: {
-          isActive: true,
           ...(data.targetRole && { role: data.targetRole }),
         },
       });
+      logger.info('[NotificationService] Notificação global ou por role', { 
+        isGlobal: data.isGlobal,
+        targetRole: data.targetRole,
+        usersCount: targetUsers.length,
+        notificationId: notification.id 
+      });
     }
 
-      // Criar UserNotification para os usuários determinados
-      if (targetUsers.length > 0) {
-        await prisma.userNotification.createMany({
-          data: targetUsers.map((user) => ({
+    // Criar UserNotification para os usuários determinados
+    if (targetUsers.length > 0) {
+      try {
+        const userNotificationData = targetUsers
+          .filter(user => user !== null && user !== undefined)
+          .map((user) => ({
             userId: user.id,
             notificationId: notification.id,
-          })),
+          }));
+
+        if (userNotificationData.length > 0) {
+          const result = await prisma.userNotification.createMany({
+            data: userNotificationData,
+            skipDuplicates: true, // Evitar erros se já existir
+          });
+          
+          logger.info('[NotificationService] UserNotifications criadas', { 
+            notificationId: notification.id,
+            createdCount: result.count,
+            expectedCount: userNotificationData.length
+          });
+        } else {
+          logger.warn('[NotificationService] Nenhum UserNotification para criar (usuários filtrados)', {
+            notificationId: notification.id,
+            originalUsersCount: targetUsers.length
+          });
+        }
+      } catch (error: any) {
+        logger.error('[NotificationService] Erro ao criar UserNotifications', {
+          error: error.message,
+          notificationId: notification.id,
+          usersCount: targetUsers.length
         });
+        // Não bloquear a criação da notificação se houver erro ao vincular usuários
+        // A notificação foi criada, mesmo que alguns vínculos falhem
       }
+    } else {
+      logger.warn('[NotificationService] Nenhum usuário destinatário encontrado', {
+        notificationId: notification.id,
+        data: {
+          userId: data.userId,
+          userIds: data.userIds,
+          vesselId: data.vesselId,
+          isGlobal: data.isGlobal,
+          targetRole: data.targetRole
+        }
+      });
+    }
 
     return notification;
   }

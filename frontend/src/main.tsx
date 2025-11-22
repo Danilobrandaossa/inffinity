@@ -23,7 +23,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Inicializar OneSignal após o app carregar
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>

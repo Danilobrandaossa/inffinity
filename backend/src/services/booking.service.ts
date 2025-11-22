@@ -404,14 +404,6 @@ export class BookingService {
         },
       },
     });
-          vesselId: booking.vesselId,
-          status: 'CANCELLED',
-        },
-      });
-    } catch (error) {
-      logger.error('Erro ao enviar push notification:', error);
-      // Não bloquear o cancelamento se a notificação falhar
-    }
 
     return updatedBooking;
   }

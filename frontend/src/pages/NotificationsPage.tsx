@@ -10,12 +10,14 @@ export default function NotificationsPage() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
-  const { data: notifications, isLoading } = useQuery({
+  const { data: notifications, isLoading, error } = useQuery({
     queryKey: ['my-notifications'],
     queryFn: async () => {
       const { data } = await api.get('/notifications/my-notifications');
       return data;
     },
+    staleTime: 30 * 1000, // 30 segundos
+    refetchOnMount: true,
   });
 
   const markAsReadMutation = useMutation({

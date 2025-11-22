@@ -153,6 +153,10 @@ export class NotificationService {
         isRead: false,
         notification: {
           isActive: true,
+          OR: [
+            { expiresAt: null },
+            { expiresAt: { gte: new Date() } },
+          ],
         },
       },
     });

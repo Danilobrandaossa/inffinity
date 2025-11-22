@@ -89,8 +89,25 @@ export default function NotificationsPage() {
     );
   }
 
-  const unreadNotifications = notifications?.filter((n: any) => !n.isRead) || [];
-  const readNotifications = notifications?.filter((n: any) => n.isRead) || [];
+  // Garantir que notifications é um array
+  const notificationsList = Array.isArray(notifications) ? notifications : [];
+  
+  // Debug: log para ver o que está vindo da API
+  if (import.meta.env.DEV && notifications) {
+    console.log('[NotificationsPage] Notificações recebidas:', notificationsList);
+    console.log('[NotificationsPage] Tipo:', typeof notifications);
+    console.log('[NotificationsPage] É array?', Array.isArray(notifications));
+  }
+
+  const unreadNotifications = notificationsList.filter((n: any) => n && !n.isRead) || [];
+  const readNotifications = notificationsList.filter((n: any) => n && n.isRead) || [];
+  
+  // Debug: log contagem
+  if (import.meta.env.DEV) {
+    console.log('[NotificationsPage] Não lidas:', unreadNotifications.length);
+    console.log('[NotificationsPage] Lidas:', readNotifications.length);
+    console.log('[NotificationsPage] Total:', notificationsList.length);
+  }
 
   return (
     <div className="space-y-6">

@@ -98,9 +98,6 @@ model User {
   
   // 2FA Fields
   twoFactorEnabled Boolean @default(false)
-  
-  // OneSignal
-  onesignalPlayerId String?
   twoFactorSecret  String?
   backupCodes      String? // JSON array of backup codes
   

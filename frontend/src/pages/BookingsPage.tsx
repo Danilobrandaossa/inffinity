@@ -272,14 +272,12 @@ export default function BookingsPage() {
     e.preventDefault();
     if (!selectedDate || !selectedVessel) return;
 
-    const formData = new FormData(e.currentTarget);
     // Garantir normalização da data e enviar apenas data (YYYY-MM-DD)
     const normalizedDate = startOfDay(selectedDate);
     const dateOnly = format(normalizedDate, 'yyyy-MM-dd');
     createBooking.mutate({
       vesselId: selectedVessel.id,
       bookingDate: dateOnly,
-      notes: formData.get('notes'),
     });
   };
 
@@ -890,16 +888,6 @@ export default function BookingsPage() {
                     value={selectedDate ? format(startOfDay(selectedDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : ''}
                     className="input bg-white text-gray-900"
                     disabled
-                  />
-                </div>
-
-                <div>
-                  <label className="label">Observações (opcional)</label>
-                  <textarea
-                    name="notes"
-                    className="input bg-white text-gray-900"
-                    rows={3}
-                    placeholder="Adicione observações sobre sua reserva"
                   />
                 </div>
 
